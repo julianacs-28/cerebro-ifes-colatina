@@ -519,14 +519,14 @@ function getBanco() {
 }
 function setBanco(b) { localStorage.setItem('radar_banco', JSON.stringify(b)); }
 
-// Importa oportunidades do JSON sem duplicar — adiciona dataCadastro na 1ª vez
+// Sincroniza o banco local com o dados.json atual — preserva dataCadastro de itens
+// que já existiam (para a badge "Novo" continuar correta), mas descarta qualquer
+// item que não esteja mais no JSON (evita acúmulo de dados antigos/placeholder).
 function importarNoBanco(dadosJson) {
-  const banco = getBanco();
+  const bancoAntigo = getBanco();
   const hoje = new Date();
   const hojeStr = String(hoje.getDate()).padStart(2,'0')+'/'+String(hoje.getMonth()+1).padStart(2,'0')+'/'+hoje.getFullYear();
-  const chaves = new Set(banco.map(o => chaveOport(o)));
-  let adicionados = 0;
-  const novas = [];
+  const mapaAntigo = new Map(bancoAntigo.map(o => [chaveOport(o), o]));
 
   // Coleta todas as oportunidades do JSON
   const todas = [];
@@ -535,24 +535,13 @@ function importarNoBanco(dadosJson) {
     if(Array.isArray(a)) a.forEach(o=>todas.push({...o,_cat:c}));
   });
 
-  todas.forEach(o => {
-    const ch = chaveOport(o);
-    if (!chaves.has(ch)) {
-      banco.push({...o, dataCadastro: hojeStr});
-      chaves.add(ch);
-      adicionados++;
-    }
-    // Se já existe, atualiza prazo/link mas preserva dataCadastro
-    else {
-      const idx = banco.findIndex(b => chaveOport(b) === ch);
-      if (idx > -1) {
-        banco[idx] = {...banco[idx], prazo: o.prazo, link: o.link, valor: o.valor, publico: o.publico};
-      }
-    }
+  const bancoNovo = todas.map(o => {
+    const anterior = mapaAntigo.get(chaveOport(o));
+    return { ...o, dataCadastro: anterior?.dataCadastro || hojeStr };
   });
 
-  setBanco(banco);
-  return adicionados;
+  setBanco(bancoNovo);
+  return bancoNovo.length;
 }
 
 // ═══════════════════════════════════════════════
@@ -589,6 +578,7 @@ function todas() {
   lista.forEach(o => {
     o._urgencia = calcUrgencia(o);
     o._nova = calcNovidade(o);
+    o._statusCalc = o._urgencia === 'ENCERRADO' ? 'ENCERRADO' : (o._nova ? 'NOVO' : o._urgencia);
   });
   return lista;
 }

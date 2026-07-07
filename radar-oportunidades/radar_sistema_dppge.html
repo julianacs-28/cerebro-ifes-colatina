@@ -496,6 +496,7 @@
   <div class="topbar">
     <div class="topbar-title" id="topbar-title">✏️ Editor de Boletim</div>
     <div class="topbar-actions">
+      <button class="btn btn-secondary btn-sm" id="btn-nova-edicao">🆕 Nova Edição</button>
       <button class="btn btn-secondary btn-sm" id="btn-exportar-json">⬇ Exportar JSON</button>
       <button class="btn btn-secondary btn-sm" id="btn-salvar">💾 Salvar Edição</button>
       <button class="btn btn-primary btn-sm" id="btn-copiar-html">🚀 Gerar para Outlook</button>
@@ -1297,6 +1298,56 @@ function deletarEdicao(id) {
   toast('Edição removida.');
 }
 
+function proximoNumeroEdicao() {
+  const nums = getHistorico().map(e => parseInt(e.numero, 10)).filter(n => !isNaN(n));
+  const next = nums.length ? Math.max(...nums) + 1 : 1;
+  return String(next).padStart(2, '0');
+}
+
+function mesAtualExtenso() {
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const hoje = new Date();
+  return `${meses[hoje.getMonth()]} ${hoje.getFullYear()}`;
+}
+
+function dataAtualBR() {
+  const hoje = new Date();
+  return `${String(hoje.getDate()).padStart(2,'0')}/${String(hoje.getMonth()+1).padStart(2,'0')}/${hoje.getFullYear()}`;
+}
+
+function novaEdicao() {
+  if (!confirm('Iniciar uma nova edição? Os dados não salvos no Editor atual serão perdidos.')) return;
+
+  document.getElementById('edicao-numero').value = proximoNumeroEdicao();
+  document.getElementById('edicao-mes').value = mesAtualExtenso();
+  document.getElementById('edicao-data').value = dataAtualBR();
+
+  document.getElementById('d-status').value = 'NOVO';
+  document.getElementById('d-categoria').value = 'pesquisa';
+  document.getElementById('d-origem').value = 'DPPGE';
+  document.getElementById('d-titulo').value = '';
+  document.getElementById('d-link').value = '';
+  document.getElementById('d-resumo').value = '';
+  document.getElementById('d-prazo').value = '';
+  document.getElementById('d-valor').value = '';
+  document.getElementById('d-publico').value = '';
+  document.getElementById('d-imagem').value = '';
+
+  ['pesquisa','internac','bolsas','evento','premiacoes','extensao'].forEach(cat => {
+    document.getElementById('cards-' + cat).innerHTML = '';
+  });
+  document.getElementById('informes-list').innerHTML = '';
+
+  document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  document.querySelector('.editor-tab[data-tab="edicao"]').classList.add('active');
+  document.getElementById('tab-edicao').classList.add('active');
+
+  switchView('editor');
+  updatePreview();
+  toast(`Nova edição iniciada — Edição #${document.getElementById('edicao-numero').value}`);
+}
+
 function loadData(d) {
   document.getElementById('edicao-numero').value = d.numero || '';
   document.getElementById('edicao-mes').value = d.mes || '';
@@ -1555,6 +1606,9 @@ document.querySelectorAll('#tab-edicao input, #tab-destaque input, #tab-destaque
   el.addEventListener('input', updatePreview);
   el.addEventListener('change', updatePreview);
 });
+
+// Nova edição
+document.getElementById('btn-nova-edicao').addEventListener('click', novaEdicao);
 
 // Salvar
 document.getElementById('btn-salvar').addEventListener('click', salvarEdicao);
