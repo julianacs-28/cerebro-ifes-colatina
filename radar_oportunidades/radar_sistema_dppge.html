@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radar de Oportunidades — Sistema DPPGE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --verde-escuro: #0c420b;
+    --verde-medio: #196d1e;
+    --verde-claro: #e8f5e8;
+    --cinza-bg: #f4f6f4;
+    --cinza-borda: #dde5dd;
+    --texto: #1a1a1a;
+    --texto-suave: #555;
+    --azul-link: #004aad;
+    --sidebar-w: 220px;
+    --roxo-bg: #EBE9F4; --roxo-cor: #4A368F;
+    --azul-bg: #DDE8FA; --azul-cor: #0149AF;
+    --rosa-bg: #F4CEDD; --rosa-cor: #C2195A;
+    --laranja-bg: #FCE5D5; --laranja-cor: #A03B11;
+    --dourado-bg: #F5EFD7; --dourado-cor: #7A5B00;
+    --teal-bg: #D7F6F1; --teal-cor: #006A5C;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--cinza-bg);
+    color: var(--texto);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--verde-escuro);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width .25s ease;
+    overflow: hidden;
+    z-index: 100;
+  }
+  #sidebar.collapsed { width: 52px; }
+
+  .sidebar-logo {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .sidebar-logo img { width: 28px; height: 28px; flex-shrink: 0; }
+  .sidebar-logo-text { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.3; }
+  .sidebar-logo-sub { font-size: 10px; color: #7ec87e; letter-spacing: .5px; text-transform: uppercase; }
+
+  .sidebar-nav { flex: 1; padding: 10px 0; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    color: #a8d8a8;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,.1); color: #fff; border-left-color: #7ec87e; }
+  .nav-item .icon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,.12);
+  }
+  #toggleSidebar {
+    background: none;
+    border: 1px solid rgba(255,255,255,.25);
+    color: #a8d8a8;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  #sidebar.collapsed #toggleSidebar { text-align: center; }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--cinza-borda);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 16px; font-weight: 700; color: var(--verde-escuro); }
+  .topbar-actions { display: flex; gap: 8px; }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--verde-escuro); color: #fff; }
+  .btn-secondary { background: #fff; color: var(--texto); border: 1px solid var(--cinza-borda); }
+  .btn-accent { background: var(--azul-link); color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-danger { background: #c41e3a; color: #fff; }
+
+  /* ── VIEWS ── */
+  .view { display: none; flex: 1; overflow: hidden; }
+  .view.active { display: flex; }
+
+  /* ── EDITOR VIEW ── */
+  #view-editor {
+    flex-direction: row;
+    overflow: hidden;
+  }
+
+  #editor-panel {
+    width: 420px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid var(--cinza-borda);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--cinza-borda);
+    background: var(--cinza-bg);
+    flex-shrink: 0;
+  }
+  .editor-tab {
+    padding: 11px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--texto-suave);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .editor-tab.active { color: var(--verde-escuro); border-bottom-color: var(--verde-escuro); background: #fff; }
+
+  .editor-scroll { flex: 1; overflow-y: auto; padding: 16px; }
+
+  .form-section {
+    margin-bottom: 20px;
+    display: none;
+  }
+  .form-section.active { display: block; }
+
+  .section-header {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--verde-escuro);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--verde-claro);
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto-suave);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--texto);
+    background: #fff;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--verde-medio);
+  }
+  .field textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  .card-block {
+    background: var(--cinza-bg);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .card-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .card-block-title { font-size: 13px; font-weight: 700; color: var(--texto); }
+  .card-block-remove {
+    background: none;
+    border: none;
+    color: #c41e3a;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+  }
+
+  .add-card-btn {
+    width: 100%;
+    padding: 10px;
+    border: 1.5px dashed var(--cinza-borda);
+    border-radius: 4px;
+    background: none;
+    color: var(--verde-medio);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .add-card-btn:hover { border-color: var(--verde-medio); background: var(--verde-claro); }
+
+  /* ── PREVIEW PANEL ── */
+  #preview-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--cinza-bg);
+  }
+
+  .preview-toolbar {
+    padding: 10px 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--cinza-borda);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .preview-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--texto-suave); }
+
+  #preview-frame {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  #preview-content {
+    width: 620px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 6px;
+    overflow: visible;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 2px 16px rgba(0,0,0,.08);
+    flex-shrink: 0;
+  }
+
+  /* ── DASHBOARD VIEW ── */
+  #view-dashboard {
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 24px;
+    background: var(--cinza-bg);
+  }
+
+  .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .dashboard-title { font-size: 20px; font-weight: 700; color: var(--verde-escuro); }
+
+  .period-filter { display: flex; gap: 6px; }
+  .period-btn {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1.5px solid var(--cinza-borda);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--texto-suave);
+    transition: all .15s;
+  }
+  .period-btn.active { background: var(--verde-escuro); color: #fff; border-color: var(--verde-escuro); }
+
+  .kpi-row { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .kpi-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 18px 20px;
+    flex: 1;
+    min-width: 150px;
+    border: 1px solid var(--cinza-borda);
+  }
+  .kpi-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--texto-suave); margin-bottom: 8px; }
+  .kpi-value { font-size: 30px; font-weight: 700; color: var(--verde-escuro); line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--texto-suave); margin-top: 4px; }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--cinza-borda);
+  }
+  .chart-card h3 { font-size: 14px; font-weight: 700; color: var(--texto); margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 200px; }
+
+  /* ── HISTÓRICO VIEW ── */
+  #view-historico {
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 24px;
+    background: var(--cinza-bg);
+  }
+
+  .historico-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .edicao-card {
+    background: #fff;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .edicao-info { flex: 1; }
+  .edicao-titulo { font-size: 15px; font-weight: 700; color: var(--texto); }
+  .edicao-meta { font-size: 13px; color: var(--texto-suave); margin-top: 4px; }
+  .edicao-actions { display: flex; gap: 8px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--texto-suave);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 8px;
+    padding: 28px;
+    width: 600px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--verde-escuro); }
+  .modal p { font-size: 14px; color: var(--texto-suave); margin-bottom: 16px; line-height: 1.6; }
+  .modal pre {
+    background: #f4f4f4;
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border: 1px solid var(--cinza-borda);
+    margin-bottom: 16px;
+  }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--verde-escuro);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 2000;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── STATUS BADGE COLORS ── */
+  .status-novo { border-color: #1B5E20; color: #1B5E20; background: #e8f5e8; }
+  .status-prazo { border-color: #F57F17; color: #F57F17; background: #fff8e1; }
+  .status-ultimos { border-color: #C41E3A; color: #C41E3A; background: #ffebee; }
+  .status-fluxo { border-color: #9E9E9E; color: #616161; background: #f5f5f5; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--cinza-borda); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <img src="https://github.com/julianacs-28/radar-oportunidades-imagens/blob/main/radar-oportunidades.png?raw=true" alt="Radar">
+    <div>
+      <div class="sidebar-logo-text">Radar de Oportunidades</div>
+      <div class="sidebar-logo-sub">DPPGE · Ifes Colatina</div>
+    </div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-item active" data-view="editor">
+      <span class="icon">✏️</span><span>Editor</span>
+    </div>
+    <div class="nav-item" data-view="historico">
+      <span class="icon">📚</span><span>Histórico</span>
+    </div>
+    <div class="nav-item" data-view="dashboard">
+      <span class="icon">📊</span><span>Dashboard</span>
+    </div>
+    <div class="nav-item" id="nav-importar" style="margin-top:16px; border-top:1px solid rgba(255,255,255,.1); padding-top:16px;">
+      <span class="icon">📥</span><span>Importar JSON</span>
+    </div>
+    <div class="nav-item" id="nav-modelo">
+      <span class="icon">📄</span><span>Modelo + Prompt IA</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button id="toggleSidebar">◀ Recolher</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">✏️ Editor de Boletim</div>
+    <div class="topbar-actions">
+      <button class="btn btn-secondary btn-sm" id="btn-exportar-json">⬇ Exportar JSON</button>
+      <button class="btn btn-secondary btn-sm" id="btn-salvar">💾 Salvar Edição</button>
+      <button class="btn btn-primary btn-sm" id="btn-copiar-html">🚀 Gerar para Outlook</button>
+    </div>
+  </div>
+
+  <!-- ── VIEW: EDITOR ── -->
+  <div id="view-editor" class="view active">
+
+    <!-- EDITOR PANEL -->
+    <div id="editor-panel">
+      <div class="editor-tabs">
+        <div class="editor-tab active" data-tab="edicao">Edição</div>
+        <div class="editor-tab" data-tab="destaque">⭐ Destaque</div>
+        <div class="editor-tab" data-tab="categorias">Categorias</div>
+        <div class="editor-tab" data-tab="informes">Informes</div>
+      </div>
+      <div class="editor-scroll">
+
+        <!-- TAB: DADOS DA EDIÇÃO -->
+        <div class="form-section active" id="tab-edicao">
+          <div class="section-header">Dados da Edição</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Número da Edição</label>
+              <input type="text" id="edicao-numero" placeholder="01" value="01">
+            </div>
+            <div class="field">
+              <label>Mês / Ano</label>
+              <input type="text" id="edicao-mes" placeholder="Julho 2026" value="Julho 2026">
+            </div>
+          </div>
+          <div class="field">
+            <label>Data de Envio</label>
+            <input type="text" id="edicao-data" placeholder="01/07/2026" value="01/07/2026">
+          </div>
+        </div>
+
+        <!-- TAB: DESTAQUE -->
+        <div class="form-section" id="tab-destaque">
+          <div class="section-header">Destaque da Edição</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Status</label>
+              <select id="d-status">
+                <option value="NOVO">🟢 NOVO</option>
+                <option value="PRAZO PRÓXIMO">🟡 PRAZO PRÓXIMO</option>
+                <option value="ÚLTIMOS DIAS">🔴 ÚLTIMOS DIAS</option>
+                <option value="FLUXO CONTÍNUO">↻ FLUXO CONTÍNUO</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Categoria</label>
+              <select id="d-categoria">
+                <option value="pesquisa">🔍 Pesquisa & Fomento</option>
+                <option value="internac">🌐 Internacionalização</option>
+                <option value="bolsas">💰 Bolsas & Auxílios</option>
+                <option value="evento">🏛 Eventos & Capacitações</option>
+                <option value="premiacoes">🏆 Premiações</option>
+                <option value="extensao">🤝 Extensão & Comunidade</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Origem (Coordenadoria / Núcleo)</label>
+            <select id="d-origem">
+              <option>Coord. de Pesquisa</option>
+              <option>Coord. de Pós-Graduação</option>
+              <option>Coord. de Extensão</option>
+              <option>Coord. de Laboratórios</option>
+              <option>Coord. de Rel. Institucionais</option>
+              <option>Núcleo de Rel. Internacionais</option>
+              <option>Núcleo de Arte e Cultura</option>
+              <option>Núcleo de Ed. Ambiental</option>
+              <option>Núcleo de Incubação</option>
+              <option>DPPGE</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Título</label>
+            <input type="text" id="d-titulo" placeholder="Edital PRPPG 10/2024 — Prociência">
+          </div>
+          <div class="field">
+            <label>Link do Edital</label>
+            <input type="url" id="d-link" placeholder="https://...">
+          </div>
+          <div class="field">
+            <label>Resumo (o nome do edital no início será linkado automaticamente)</label>
+            <textarea id="d-resumo" rows="4" placeholder="O Edital PRPPG 10/2024 — Prociência apoia projetos de pesquisa..."></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Prazo</label>
+              <input type="text" id="d-prazo" placeholder="01/09/2026">
+            </div>
+            <div class="field">
+              <label>Valor</label>
+              <input type="text" id="d-valor" placeholder="Até R$ 250.000">
+            </div>
+          </div>
+          <div class="field">
+            <label>Público-alvo</label>
+            <input type="text" id="d-publico" placeholder="Docentes e Técnicos">
+          </div>
+          <div class="field">
+            <label>Imagem (URL GitHub — opcional)</label>
+            <input type="url" id="d-imagem" placeholder="https://github.com/...?raw=true">
+          </div>
+        </div>
+
+        <!-- TAB: CATEGORIAS -->
+        <div class="form-section" id="tab-categorias">
+          <!-- PESQUISA & FOMENTO -->
+          <div class="section-header" style="color: var(--roxo-cor);">🔍 Pesquisa & Fomento</div>
+          <div id="cards-pesquisa"></div>
+          <button class="add-card-btn" data-cat="pesquisa">+ Adicionar card de Pesquisa & Fomento</button>
+
+          <div style="margin: 20px 0 12px; border-top: 1px solid var(--cinza-borda); padding-top: 16px;">
+            <div class="section-header" style="color: var(--azul-cor);">🌐 Internacionalização</div>
+          </div>
+          <div id="cards-internac"></div>
+          <button class="add-card-btn" data-cat="internac">+ Adicionar card de Internacionalização</button>
+
+          <div style="margin: 20px 0 12px; border-top: 1px solid var(--cinza-borda); padding-top: 16px;">
+            <div class="section-header" style="color: var(--rosa-cor);">💰 Bolsas & Auxílios</div>
+          </div>
+          <div id="cards-bolsas"></div>
+          <button class="add-card-btn" data-cat="bolsas">+ Adicionar card de Bolsas & Auxílios</button>
+
+          <div style="margin: 20px 0 12px; border-top: 1px solid var(--cinza-borda); padding-top: 16px;">
+            <div class="section-header" style="color: var(--laranja-cor);">🏛 Eventos & Capacitações</div>
+          </div>
+          <div id="cards-evento"></div>
+          <button class="add-card-btn" data-cat="evento">+ Adicionar card de Eventos & Capacitações</button>
+
+          <div style="margin: 20px 0 12px; border-top: 1px solid var(--cinza-borda); padding-top: 16px;">
+            <div class="section-header" style="color: var(--dourado-cor);">🏆 Premiações</div>
+          </div>
+          <div id="cards-premiacoes"></div>
+          <button class="add-card-btn" data-cat="premiacoes">+ Adicionar card de Premiações</button>
+
+          <div style="margin: 20px 0 12px; border-top: 1px solid var(--cinza-borda); padding-top: 16px;">
+            <div class="section-header" style="color: var(--teal-cor);">🤝 Extensão & Comunidade</div>
+          </div>
+          <div id="cards-extensao"></div>
+          <button class="add-card-btn" data-cat="extensao">+ Adicionar card de Extensão & Comunidade</button>
+        </div>
+
+        <!-- TAB: INFORMES -->
+        <div class="form-section" id="tab-informes">
+          <div class="section-header">Informes da DPPGE</div>
+          <div id="informes-list"></div>
+          <button class="add-card-btn" id="btn-add-informe">+ Adicionar Informe</button>
+        </div>
+
+      </div><!-- editor-scroll -->
+    </div><!-- editor-panel -->
+
+    <!-- PREVIEW PANEL -->
+    <div id="preview-panel">
+      <div class="preview-toolbar">
+        <span class="preview-label">👁 Prévia do Boletim</span>
+        <button class="btn btn-secondary btn-sm" id="btn-refresh-preview">↻ Atualizar prévia</button>
+      </div>
+      <div id="preview-frame">
+        <div id="preview-content"></div>
+      </div>
+    </div>
+
+  </div><!-- view-editor -->
+
+  <!-- ── VIEW: HISTÓRICO ── -->
+  <div id="view-historico" class="view">
+    <div class="historico-header">
+      <div class="dashboard-title">📚 Histórico de Edições</div>
+    </div>
+    <div id="historico-list"></div>
+  </div>
+
+  <!-- ── VIEW: DASHBOARD ── -->
+  <div id="view-dashboard" class="view">
+    <div class="dashboard-header">
+      <div class="dashboard-title">📊 Dashboard de Comunicação</div>
+      <div class="period-filter">
+        <button class="period-btn active" data-months="3">3 meses</button>
+        <button class="period-btn" data-months="6">6 meses</button>
+        <button class="period-btn" data-months="9">9 meses</button>
+        <button class="period-btn" data-months="12">12 meses</button>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Boletins enviados</div>
+        <div class="kpi-value" id="kpi-boletins">0</div>
+        <div class="kpi-sub">no período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Oportunidades divulgadas</div>
+        <div class="kpi-value" id="kpi-oportunidades">0</div>
+        <div class="kpi-sub">total de cards</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Categoria mais ativa</div>
+        <div class="kpi-value" style="font-size:18px;" id="kpi-top-cat">—</div>
+        <div class="kpi-sub" id="kpi-top-cat-n"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Origem mais ativa</div>
+        <div class="kpi-value" style="font-size:14px;" id="kpi-top-origem">—</div>
+        <div class="kpi-sub" id="kpi-top-origem-n"></div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Oportunidades por Categoria</h3>
+        <div class="chart-wrap"><canvas id="chart-categoria"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Evolução mensal de publicações</h3>
+        <div class="chart-wrap"><canvas id="chart-evolucao"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Por Coordenadoria / Núcleo</h3>
+        <div class="chart-wrap"><canvas id="chart-origem"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Distribuição de Status</h3>
+        <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- main -->
+
+<!-- INPUT file oculto para importar JSON -->
+<input type="file" id="file-input" accept=".json" style="display:none">
+
+<!-- MODAL: Modelo + Prompt IA -->
+<div class="modal-overlay" id="modal-modelo">
+  <div class="modal">
+    <h2>📄 Modelo JSON + Prompt para IA</h2>
+    <p>Copie o prompt abaixo e envie para o Claude (ou outra IA) junto com os dados do edital (link, PDF ou texto). A IA irá gerar um JSON já no formato correto para importar aqui.</p>
+    <pre id="prompt-ia-text"></pre>
+    <p style="margin-top:0; margin-bottom:12px;"><strong>Modelo de JSON (estrutura mínima):</strong></p>
+    <pre id="modelo-json-text"></pre>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="btn-copiar-prompt">📋 Copiar Prompt</button>
+      <button class="btn btn-primary" id="btn-baixar-modelo">⬇ Baixar JSON Modelo</button>
+      <button class="btn btn-secondary" id="btn-fechar-modelo">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Visualizar HTML gerado -->
+<div class="modal-overlay" id="modal-html">
+  <div class="modal" style="width:700px;">
+    <h2>🚀 Enviar para o Outlook — como fazer</h2>
+
+    <div style="background:#e8f5e8;border-left:4px solid #196d1e;border-radius:0 6px 6px 0;padding:16px 18px;margin-bottom:20px;">
+      <p style="color:#0c420b;font-weight:700;font-size:15px;margin:0 0 8px 0;">✅ Forma correta — nova aba do navegador</p>
+      <p style="color:#333;margin:0;font-size:14px;line-height:1.6;">
+        O boletim foi aberto em uma <strong>nova aba do seu navegador</strong>.<br>
+        Nessa aba, faça:<br>
+        <strong>1.</strong> Pressione <kbd style="background:#fff;border:1px solid #ccc;border-radius:3px;padding:2px 6px;font-family:monospace;">Ctrl + A</kbd> para selecionar todo o conteúdo<br>
+        <strong>2.</strong> Pressione <kbd style="background:#fff;border:1px solid #ccc;border-radius:3px;padding:2px 6px;font-family:monospace;">Ctrl + C</kbd> para copiar<br>
+        <strong>3.</strong> Abra um novo e-mail no Outlook<br>
+        <strong>4.</strong> Clique no corpo do e-mail e pressione <kbd style="background:#fff;border:1px solid #ccc;border-radius:3px;padding:2px 6px;font-family:monospace;">Ctrl + V</kbd> para colar
+      </p>
+    </div>
+
+    <div style="background:#fff8e1;border-left:4px solid #F57F17;border-radius:0 6px 6px 0;padding:12px 18px;margin-bottom:20px;">
+      <p style="color:#8a6000;font-weight:700;font-size:14px;margin:0 0 4px 0;">⚠️ NÃO copie o código-fonte abaixo diretamente para o Outlook</p>
+      <p style="color:#555;margin:0;font-size:13px;">O código abaixo é apenas para consulta técnica. Colado diretamente no Outlook, ele aparecerá como texto de programação, não como boletim formatado.</p>
+    </div>
+
+    <p style="font-size:13px;color:#666;margin-bottom:8px;font-weight:600;">Código-fonte (apenas para consulta):</p>
+    <textarea id="html-output" style="width:100%;height:200px;font-size:11px;font-family:monospace;border:1px solid var(--cinza-borda);border-radius:4px;padding:10px;resize:vertical;color:#888;" readonly></textarea>
+    <div class="modal-footer" style="margin-top:12px;">
+      <button class="btn btn-primary" id="btn-abrir-aba">🔗 Abrir nova aba novamente</button>
+      <button class="btn btn-secondary" id="btn-fechar-html">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONSTANTES E CONFIGURAÇÕES
+// ════════════════════════════════════════════════════════
+
+const GH = 'https://github.com/julianacs-28/radar-oportunidades-imagens/blob/main/';
+const RAW = '?raw=true';
+const ICONS = {
+  radar:      GH + 'radar-oportunidades.png' + RAW,
+  estrela:    GH + 'estrela.png' + RAW,
+  novo:       GH + 'novo.png' + RAW,
+  prazo:      GH + 'circulo-laranja.png' + RAW,
+  ultimos:    GH + 'ultimos-dias.png' + RAW,
+  fluxo:      GH + 'fluxo-continuo.png' + RAW,
+  calendario: GH + 'calendario.png' + RAW,
+  dinheiro:   GH + 'dinheiro.png' + RAW,
+  publico:    GH + 'publico-alvo.png' + RAW,
+  email:      GH + 'email.png' + RAW,
+  localizacao:GH + 'localizacao.png' + RAW,
+  pesquisa:   GH + 'pesquisa-fomento.png' + RAW,
+  internac:   GH + 'internacionalizacao.png' + RAW,
+  bolsas:     GH + 'bolsas-auxilio.png' + RAW,
+  evento:     GH + 'evento-capacitacao.png' + RAW,
+  premiacoes: GH + 'premiacoes.png' + RAW,
+  extensao:   GH + 'comunidade_extensao.png' + RAW,
+  informes:   GH + 'informes.png' + RAW,
+};
+
+const CATEGORIAS = {
+  pesquisa:   { label: 'PESQUISA & FOMENTO', bg: '#EBE9F4', cor: '#4A368F', icon: 'pesquisa' },
+  internac:   { label: 'INTERNACIONALIZAÇÃO', bg: '#DDE8FA', cor: '#0149AF', icon: 'internac' },
+  bolsas:     { label: 'BOLSAS & AUXÍLIOS', bg: '#F4CEDD', cor: '#C2195A', icon: 'bolsas' },
+  evento:     { label: 'EVENTOS & CAPACITAÇÕES', bg: '#FCE5D5', cor: '#A03B11', icon: 'evento' },
+  premiacoes: { label: 'PREMIAÇÕES', bg: '#F5EFD7', cor: '#7A5B00', icon: 'premiacoes' },
+  extensao:   { label: 'EXTENSÃO & COMUNIDADE', bg: '#D7F6F1', cor: '#006A5C', icon: 'extensao' },
+};
+
+const STATUS_MAP = {
+  'NOVO':           { icon: ICONS.novo,    border: '#1B5E20', text: '#1B5E20', bg: '#e8f5e8' },
+  'PRAZO PRÓXIMO':  { icon: ICONS.prazo,   border: '#F57F17', text: '#F57F17', bg: '#fff8e1' },
+  'ÚLTIMOS DIAS':   { icon: ICONS.ultimos, border: '#C41E3A', text: '#C41E3A', bg: '#ffebee' },
+  'FLUXO CONTÍNUO': { icon: ICONS.fluxo,   border: '#9E9E9E', text: '#616161', bg: '#f5f5f5' },
+};
+
+const ORIGENS = [
+  'Coord. de Pesquisa','Coord. de Pós-Graduação','Coord. de Extensão',
+  'Coord. de Laboratórios','Coord. de Rel. Institucionais',
+  'Núcleo de Rel. Internacionais','Núcleo de Arte e Cultura',
+  'Núcleo de Ed. Ambiental','Núcleo de Incubação','DPPGE'
+];
+
+// ════════════════════════════════════════════════════════
+// ESTADO DA APLICAÇÃO
+// ════════════════════════════════════════════════════════
+
+let cards = { pesquisa: [], internac: [], bolsas: [], evento: [], premiacoes: [], extensao: [] };
+let informes = [];
+let charts = {};
+let currentPeriod = 3;
+
+// ════════════════════════════════════════════════════════
+// UTILITÁRIOS
+// ════════════════════════════════════════════════════════
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function getFieldVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function origemSelect(selected = '') {
+  return `<select class="card-origem" style="width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:4px;font-size:13px;font-family:inherit;">
+    ${ORIGENS.map(o => `<option ${o === selected ? 'selected' : ''}>${o}</option>`).join('')}
+  </select>`;
+}
+
+function statusSelect(selected = 'NOVO') {
+  const opts = ['NOVO','PRAZO PRÓXIMO','ÚLTIMOS DIAS','FLUXO CONTÍNUO'];
+  return `<select class="card-status" style="width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:4px;font-size:13px;font-family:inherit;">
+    ${opts.map(o => `<option ${o === selected ? 'selected' : ''}>${o}</option>`).join('')}
+  </select>`;
+}
+
+// ════════════════════════════════════════════════════════
+// CARDS DO FORMULÁRIO
+// ════════════════════════════════════════════════════════
+
+function createCardBlock(cat, idx, data = {}) {
+  const div = document.createElement('div');
+  div.className = 'card-block';
+  div.dataset.cat = cat;
+  div.dataset.idx = idx;
+  div.innerHTML = `
+    <div class="card-block-header">
+      <span class="card-block-title">Card ${idx + 1}</span>
+      <button class="card-block-remove" title="Remover">✕</button>
+    </div>
+    <div class="field"><label>Status</label>${statusSelect(data.status)}</div>
+    <div class="field"><label>Origem</label>${origemSelect(data.origem)}</div>
+    <div class="field"><label>Título</label><input class="card-titulo" type="text" placeholder="Nome do edital/programa" value="${data.titulo || ''}"></div>
+    <div class="field"><label>Link</label><input class="card-link" type="url" placeholder="https://..." value="${data.link || ''}"></div>
+    <div class="field"><label>Resumo (o primeiro nome linkado será o título)</label><textarea class="card-resumo" rows="3" placeholder="O [Nome] oferece/apoia...">${data.resumo || ''}</textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Prazo / Data</label><input class="card-prazo" type="text" placeholder="DD/MM/AAAA" value="${data.prazo || ''}"></div>
+      <div class="field"><label>Valor</label><input class="card-valor" type="text" placeholder="R$ ..." value="${data.valor || ''}"></div>
+    </div>
+    <div class="field"><label>Público-alvo</label><input class="card-publico" type="text" placeholder="Docentes, Estudantes..." value="${data.publico || ''}"></div>
+    <div class="field"><label>Imagem (URL GitHub — opcional)</label><input class="card-imagem" type="url" placeholder="https://github.com/...?raw=true" value="${data.imagem || ''}"></div>
+    ${cat === 'evento' ? `<div class="field"><label>Local</label><input class="card-local" type="text" placeholder="Auditório, Online..." value="${data.local || ''}"></div>` : ''}
+  `;
+  div.querySelector('.card-block-remove').addEventListener('click', () => {
+    div.remove();
+    updatePreview();
+  });
+  div.querySelectorAll('input, select, textarea').forEach(el => el.addEventListener('input', updatePreview));
+  return div;
+}
+
+function addCard(cat, data = {}) {
+  const container = document.getElementById('cards-' + cat);
+  const idx = container.querySelectorAll('.card-block').length;
+  container.appendChild(createCardBlock(cat, idx, data));
+  updatePreview();
+}
+
+// ════════════════════════════════════════════════════════
+// INFORMES
+// ════════════════════════════════════════════════════════
+
+function addInforme(data = {}) {
+  const list = document.getElementById('informes-list');
+  const div = document.createElement('div');
+  div.className = 'card-block';
+  div.innerHTML = `
+    <div class="card-block-header">
+      <span class="card-block-title">Informe</span>
+      <button class="card-block-remove">✕</button>
+    </div>
+    <div class="field"><label>Título</label><input class="inf-titulo" type="text" placeholder="Título do informe" value="${data.titulo || ''}"></div>
+    <div class="field"><label>Texto</label><textarea class="inf-texto" rows="3" placeholder="Texto do comunicado...">${data.texto || ''}</textarea></div>
+    <div class="field"><label>E-mail de contato</label><input class="inf-email" type="text" placeholder="pesquisa.col@ifes.edu.br" value="${data.email || 'pesquisa.col@ifes.edu.br'}"></div>
+  `;
+  div.querySelector('.card-block-remove').addEventListener('click', () => { div.remove(); updatePreview(); });
+  div.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', updatePreview));
+  list.appendChild(div);
+  updatePreview();
+}
+
+// ════════════════════════════════════════════════════════
+// GERAÇÃO DO HTML DO BOLETIM
+// ════════════════════════════════════════════════════════
+
+function badgeStatus(status) {
+  const s = STATUS_MAP[status] || STATUS_MAP['NOVO'];
+  return `<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;border-collapse:separate;">
+    <tr><td style="background-color:${s.bg};border:1.5px solid ${s.border};border-radius:14px;padding:4px 12px 4px 8px;mso-padding-alt:4px 12px 4px 8px;">
+      <table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="padding-right:5px;vertical-align:middle;"><img src="${s.icon}" width="10" height="10" alt="" style="display:block;border:0;"></td>
+        <td style="vertical-align:middle;font-size:10px;font-weight:bold;color:${s.text};font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0.5px;white-space:nowrap;">${status}</td>
+      </tr></table>
+    </td></tr>
+  </table>`;
+}
+
+function badgeOrigem(origem) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;">
+    <tr>
+      <td style="border-left:1px solid #cccccc;padding:0;font-size:0;line-height:0;">&nbsp;</td>
+      <td style="padding-left:12px;vertical-align:middle;"><span style="font-size:11px;font-weight:normal;color:#888888;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0.5px;text-transform:uppercase;">${origem.toUpperCase()}</span></td>
+    </tr>
+  </table>`;
+}
+
+function badgesRow(status, origem) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+    <tr>
+      <td style="vertical-align:middle;white-space:nowrap;padding-right:12px;">${badgeStatus(status)}</td>
+      <td style="vertical-align:middle;">${badgeOrigem(origem)}</td>
+    </tr>
+  </table>`;
+}
+
+function dadosRow(prazo, valor, publico, local) {
+  const ico = (url, txt) => txt ? `<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;margin-right:14px;">
+    <tr>
+      <td style="vertical-align:middle;padding-right:6px;"><img src="${url}" width="14" height="14" alt="" style="display:block;border:0;"></td>
+      <td style="vertical-align:middle;"><span style="font-size:13px;font-weight:600;color:#333333;font-family:'Segoe UI',Arial,sans-serif;">${txt}</span></td>
+    </tr>
+  </table>` : '';
+  return `<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;"><tr>
+    <td style="vertical-align:middle;">
+      ${ico(ICONS.calendario, prazo)}
+      ${ico(ICONS.dinheiro, valor)}
+      ${local ? ico(ICONS.localizacao, local) : ico(ICONS.publico, publico)}
+      ${local ? ico(ICONS.publico, publico) : ''}
+    </td>
+  </tr></table>`;
+}
+
+function sectionHeader(catKey) {
+  const c = CATEGORIAS[catKey];
+  return `<tr><td style="padding:28px 32px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="background-color:${c.bg};border-radius:6px;padding:10px 16px;">
+        <table cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="vertical-align:middle;padding-right:10px;"><img src="${ICONS[c.icon]}" width="32" height="32" alt="${c.label}" style="display:block;border:0;"></td>
+          <td style="vertical-align:middle;"><p style="margin:0;font-size:17px;font-weight:bold;color:${c.cor};font-family:'Segoe UI',Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;">${c.label}</p></td>
+        </tr></table>
+      </td>
+    </tr></table>
+  </td></tr>`;
+}
+
+function cardHTML(d, catKey, isLast) {
+  const linkStyle = `color:#004aad;text-decoration:underline;font-weight:600;`;
+  const resumoLinkado = d.link ? d.resumo.replace(d.titulo, `<a href="${d.link}" style="${linkStyle}">${d.titulo}</a>`) : d.resumo;
+  const ctaText = d.link ? `Acessar ${d.titulo} →` : '';
+  const isEvento = catKey === 'evento';
+
+  return `<tr><td style="padding:16px 32px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr><td style="padding-bottom:16px;text-align:left;">
+        ${badgesRow(d.status, d.origem)}
+        <p style="margin:0 0 6px 0;font-size:18px;font-weight:bold;color:#1a1a1a;font-family:'Segoe UI',Arial,sans-serif;line-height:32px;mso-line-height-rule:exactly;">${d.titulo}</p>
+        ${d.imagem ? `<img src="${d.imagem}" width="556" height="200" alt="Imagem" style="display:block;width:100%;max-width:556px;height:auto;border-radius:4px;border:0;margin-bottom:12px;">` : ''}
+        <p style="margin:0 0 12px 0;font-size:16px;color:#333333;font-family:'Segoe UI',Arial,sans-serif;line-height:36px;mso-line-height-rule:exactly;">${resumoLinkado}</p>
+        ${dadosRow(d.prazo, d.valor, d.publico, d.local || '')}
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td></td>
+          <td align="right">${d.link ? `<a href="${d.link}" style="display:inline-block;color:#004aad;font-size:14px;font-weight:bold;font-family:'Segoe UI',Arial,sans-serif;text-decoration:none;white-space:nowrap;">${ctaText}</a>` : ''}</td>
+        </tr></table>
+      </td></tr>
+      ${!isLast ? '<tr><td style="border-top:1px solid #eeeeee;"></td></tr>' : ''}
+    </table>
+  </td></tr>`;
+}
+
+function informeHTML(inf) {
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fcf8;border-left:4px solid #1B5E20;border-radius:0 5px 5px 0;margin-bottom:12px;">
+    <tr><td style="padding:16px 18px;">
+      <p style="margin:0 0 6px 0;font-size:14px;font-weight:bold;color:#0c420b;font-family:'Segoe UI',Arial,sans-serif;">${inf.titulo}</p>
+      <p style="margin:0 0 10px 0;font-size:16px;color:#333333;font-family:'Segoe UI',Arial,sans-serif;line-height:36px;mso-line-height-rule:exactly;">${inf.texto}</p>
+      ${inf.email ? `<table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="vertical-align:middle;padding-right:6px;"><img src="${ICONS.email}" width="14" height="14" alt="" style="display:block;border:0;"></td>
+        <td style="vertical-align:middle;"><a href="mailto:${inf.email}" style="color:#004aad;font-size:14px;font-weight:bold;font-family:'Segoe UI',Arial,sans-serif;text-decoration:none;">${inf.email} →</a></td>
+      </tr></table>` : ''}
+    </td></tr>
+  </table>`;
+}
+
+function collectData() {
+  const num = getFieldVal('edicao-numero');
+  const mes = getFieldVal('edicao-mes');
+  const data = getFieldVal('edicao-data');
+
+  const destaque = {
+    status: document.getElementById('d-status')?.value || 'NOVO',
+    categoria: document.getElementById('d-categoria')?.value || 'pesquisa',
+    origem: document.getElementById('d-origem')?.value || 'DPPGE',
+    titulo: getFieldVal('d-titulo'),
+    link: getFieldVal('d-link'),
+    resumo: getFieldVal('d-resumo'),
+    prazo: getFieldVal('d-prazo'),
+    valor: getFieldVal('d-valor'),
+    publico: getFieldVal('d-publico'),
+    imagem: getFieldVal('d-imagem'),
+  };
+
+  const cats = {};
+  ['pesquisa','internac','bolsas','evento','premiacoes','extensao'].forEach(cat => {
+    cats[cat] = [];
+    document.querySelectorAll(`#cards-${cat} .card-block`).forEach(block => {
+      cats[cat].push({
+        status: block.querySelector('.card-status')?.value || 'NOVO',
+        origem: block.querySelector('.card-origem')?.value || 'DPPGE',
+        titulo: block.querySelector('.card-titulo')?.value || '',
+        link: block.querySelector('.card-link')?.value || '',
+        resumo: block.querySelector('.card-resumo')?.value || '',
+        prazo: block.querySelector('.card-prazo')?.value || '',
+        valor: block.querySelector('.card-valor')?.value || '',
+        publico: block.querySelector('.card-publico')?.value || '',
+        imagem: block.querySelector('.card-imagem')?.value || '',
+        local: block.querySelector('.card-local')?.value || '',
+      });
+    });
+  });
+
+  const infs = [];
+  document.querySelectorAll('#informes-list .card-block').forEach(block => {
+    infs.push({
+      titulo: block.querySelector('.inf-titulo')?.value || '',
+      texto: block.querySelector('.inf-texto')?.value || '',
+      email: block.querySelector('.inf-email')?.value || '',
+    });
+  });
+
+  return { numero: num, mes, dataEnvio: data, destaque, categorias: cats, informes: infs };
+}
+
+function generateHTML(d) {
+  const dData = d.destaque;
+  const catDest = CATEGORIAS[dData.categoria] || CATEGORIAS.pesquisa;
+  const linkStyle = `color:#004aad;text-decoration:underline;font-weight:600;`;
+  const resumoDestLinkado = dData.link ? dData.resumo.replace(dData.titulo, `<a href="${dData.link}" style="${linkStyle}">${dData.titulo}</a>`) : dData.resumo;
+
+  let sectionsHTML = '';
+  Object.entries(d.categorias).forEach(([catKey, cardsArr]) => {
+    if (!cardsArr.length) return;
+    sectionsHTML += sectionHeader(catKey);
+    cardsArr.forEach((c, i) => {
+      sectionsHTML += cardHTML(c, catKey, i === cardsArr.length - 1);
+    });
+  });
+
+  let informesHTML = '';
+  if (d.informes && d.informes.length) {
+    informesHTML = `
+      <tr><td style="padding:28px 32px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="background-color:#e8f5e8;border-radius:6px;padding:10px 16px;">
+            <table cellpadding="0" cellspacing="0" border="0"><tr>
+              <td style="vertical-align:middle;padding-right:10px;"><img src="${ICONS.informes}" width="36" height="36" alt="Informes" style="display:block;border:0;"></td>
+              <td style="vertical-align:middle;"><p style="margin:0;font-size:17px;font-weight:bold;color:#1B5E20;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;">INFORMES DA DPPGE</p></td>
+            </tr></table>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:16px 32px 28px;">
+        ${d.informes.map(inf => informeHTML(inf)).join('')}
+      </td></tr>`;
+  }
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><title>Radar de Oportunidades DPPGE — Edição #${d.numero} | ${d.mes}</title></head>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;">
+<!--[if mso]><table width="620" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
+<table width="620" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:620px;width:620px;background-color:#ffffff;overflow:hidden;margin:0 auto;text-align:left;">
+
+<tr><td style="background-color:#196d1e;padding:10px 32px;text-align:center;">
+  <p style="margin:0 0 2px 0;font-size:13px;font-weight:bold;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;">Diretoria de Pesquisa, Pós-Graduação e Extensão</p>
+  <p style="margin:0;font-size:11px;color:#a8d8a8;letter-spacing:1.5px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">DPPGE &nbsp;·&nbsp; Ifes Campus Colatina</p>
+</td></tr>
+
+<tr><td style="background-color:#0c420b;padding:24px 32px;">
+  <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>
+    <td style="vertical-align:middle;padding-right:20px;"><img src="${ICONS.radar}" width="80" height="80" alt="Radar" style="display:block;border:0;"></td>
+    <td style="vertical-align:middle;text-align:left;">
+      <p style="margin:0;font-size:36px;font-weight:bold;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:-0.5px;line-height:46px;mso-line-height-rule:exactly;">Radar<br>de Oportunidades</p>
+      <p style="margin:8px 0 0 0;font-size:11px;color:#a8d8a8;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0.5px;">Editais &nbsp;·&nbsp; Bolsas &nbsp;·&nbsp; Fomento &nbsp;·&nbsp; Oportunidades acadêmicas</p>
+    </td>
+  </tr></table>
+</td></tr>
+
+<tr><td style="background-color:#196d1e;padding:10px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="vertical-align:middle;">
+      <table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;border-collapse:separate;">
+        <tr><td style="background-color:#2d8a31;border-radius:14px;padding:5px 16px;mso-padding-alt:5px 16px;">
+          <span style="font-size:11px;font-weight:bold;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:1px;white-space:nowrap;">EDIÇÃO #${d.numero} &nbsp;|&nbsp; ${d.mes.toUpperCase()}</span>
+        </td></tr>
+      </table>
+    </td>
+    <td align="right" style="vertical-align:middle;">
+      <p style="margin:0;font-size:11px;color:#a8d8a8;font-family:'Segoe UI',Arial,sans-serif;">Enviado em ${d.dataEnvio}</p>
+    </td>
+  </tr></table>
+</td></tr>
+
+<tr><td style="padding:28px 32px 8px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;"><tr>
+    <td style="background-color:#e8f5e8;border-radius:6px;padding:10px 16px;">
+      <table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="vertical-align:middle;padding-right:10px;"><img src="${ICONS.estrela}" width="26" height="26" alt="Destaque" style="display:block;border:0;"></td>
+        <td style="vertical-align:middle;"><p style="margin:0;font-size:17px;font-weight:bold;color:#1B5E20;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;">DESTAQUE DA EDIÇÃO</p></td>
+      </tr></table>
+    </td>
+  </tr></table>
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fcf8;border-left:4px solid #1B5E20;border-radius:0 5px 5px 0;"><tr>
+    <td style="padding:20px 22px;text-align:left;">
+      <p style="margin:0 0 6px 0;font-size:11px;font-weight:bold;color:${catDest.cor};letter-spacing:1px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">
+        <img src="${ICONS[catDest.icon]}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin-right:5px;border:0;" alt="">
+        ${catDest.label}
+      </p>
+      ${badgesRow(dData.status, dData.origem)}
+      <p style="margin:0 0 8px 0;font-size:21px;font-weight:bold;color:#0c420b;font-family:'Segoe UI',Arial,sans-serif;line-height:32px;mso-line-height-rule:exactly;">${dData.titulo}</p>
+      ${dData.imagem ? `<img src="${dData.imagem}" width="556" alt="Imagem destaque" style="display:block;width:100%;max-width:556px;height:auto;border-radius:4px;border:0;margin-bottom:12px;">` : ''}
+      <p style="margin:0 0 18px 0;font-size:16px;color:#333333;font-family:'Segoe UI',Arial,sans-serif;line-height:37px;mso-line-height-rule:exactly;">${resumoDestLinkado}</p>
+      ${dadosRow(dData.prazo, dData.valor, dData.publico, '')}
+      <table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="background-color:#0c420b;padding:10px 24px;">
+          <a href="${dData.link || '#'}" style="display:inline-block;color:#ffffff;font-size:13px;font-weight:bold;font-family:'Segoe UI',Arial,sans-serif;text-decoration:none;">Acessar Edital →</a>
+        </td>
+      </tr></table>
+    </td>
+  </tr></table>
+</td></tr>
+
+${sectionsHTML}
+${informesHTML}
+
+<tr><td style="background-color:#0c420b;padding:22px 32px;text-align:center;">
+  <p style="margin:0 0 3px 0;font-size:13px;font-weight:bold;color:#a8d8a8;font-family:'Segoe UI',Arial,sans-serif;">DPPGE — Diretoria de Pesquisa, Pós-Graduação e Extensão</p>
+  <p style="margin:0 0 1px 0;font-size:12px;color:#7ec87e;font-family:'Segoe UI',Arial,sans-serif;">Instituto Federal do Espírito Santo</p>
+  <p style="margin:0 0 12px 0;font-size:12px;color:#7ec87e;font-family:'Segoe UI',Arial,sans-serif;">Ifes Campus Colatina</p>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:1px solid #2a5a28;padding-top:12px;"></td></tr></table>
+  <p style="margin:0 0 6px 0;font-size:11px;color:#5aaa5a;font-family:'Segoe UI',Arial,sans-serif;">pesquisa.col@ifes.edu.br &nbsp;·&nbsp; ifes.edu.br/colatina</p>
+  <p style="margin:0;font-size:10px;color:#3a6a3a;font-family:'Segoe UI',Arial,sans-serif;line-height:34px;mso-line-height-rule:exactly;">Esta mensagem é destinada à comunidade acadêmica do Ifes Campus Colatina.<br>A divulgação não autorizada é proibida conforme normas internas da instituição.</p>
+</td></tr>
+
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+</body></html>`;
+}
+
+// ════════════════════════════════════════════════════════
+// PREVIEW
+// ════════════════════════════════════════════════════════
+
+function updatePreview() {
+  const d = collectData();
+  document.getElementById('preview-content').innerHTML = generateHTML(d);
+}
+
+// ════════════════════════════════════════════════════════
+// HISTÓRICO / LOCALSTORAGE
+// ════════════════════════════════════════════════════════
+
+function getHistorico() {
+  try { return JSON.parse(localStorage.getItem('radar_historico') || '[]'); } catch { return []; }
+}
+
+function salvarEdicao() {
+  const d = collectData();
+  if (!d.numero && !d.destaque.titulo) { toast('Preencha pelo menos o número da edição ou o título do Destaque.'); return; }
+  const hist = getHistorico();
+  const entry = { ...d, _id: Date.now(), _savedAt: new Date().toLocaleString('pt-BR') };
+  hist.unshift(entry);
+  localStorage.setItem('radar_historico', JSON.stringify(hist));
+  toast(`Edição #${d.numero} salva com sucesso!`);
+  renderHistorico();
+  updateDashboard();
+}
+
+function renderHistorico() {
+  const hist = getHistorico();
+  const el = document.getElementById('historico-list');
+  if (!hist.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Nenhuma edição salva ainda.<br>Use o Editor para criar e salvar boletins.</p></div>`;
+    return;
+  }
+  el.innerHTML = hist.map(e => `
+    <div class="edicao-card">
+      <div class="edicao-info">
+        <div class="edicao-titulo">Edição #${e.numero} — ${e.mes}</div>
+        <div class="edicao-meta">Salvo em ${e._savedAt} · ${countCards(e)} oportunidade(s)</div>
+      </div>
+      <div class="edicao-actions">
+        <button class="btn btn-secondary btn-sm" onclick="carregarEdicao(${e._id})">✏️ Editar</button>
+        <button class="btn btn-secondary btn-sm" onclick="verHTMLEdicao(${e._id})">📋 HTML</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportarEdicao(${e._id})">⬇ JSON</button>
+        <button class="btn btn-danger btn-sm" onclick="deletarEdicao(${e._id})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function countCards(e) {
+  let n = 0;
+  if (e.categorias) Object.values(e.categorias).forEach(arr => n += arr.length);
+  return n;
+}
+
+function carregarEdicao(id) {
+  const hist = getHistorico();
+  const entry = hist.find(e => e._id === id);
+  if (!entry) return;
+  loadData(entry);
+  switchView('editor');
+  toast('Edição carregada!');
+}
+
+function verHTMLEdicao(id) {
+  const hist = getHistorico();
+  const entry = hist.find(e => e._id === id);
+  if (!entry) return;
+  document.getElementById('html-output').value = generateHTML(entry);
+  document.getElementById('modal-html').classList.add('open');
+}
+
+function exportarEdicao(id) {
+  const hist = getHistorico();
+  const entry = hist.find(e => e._id === id);
+  if (!entry) return;
+  downloadJSON(entry, `radar_edicao_${entry.numero}_${entry.mes.replace(/\s/g,'_')}.json`);
+}
+
+function deletarEdicao(id) {
+  if (!confirm('Remover esta edição do histórico?')) return;
+  const hist = getHistorico().filter(e => e._id !== id);
+  localStorage.setItem('radar_historico', JSON.stringify(hist));
+  renderHistorico();
+  updateDashboard();
+  toast('Edição removida.');
+}
+
+function loadData(d) {
+  document.getElementById('edicao-numero').value = d.numero || '';
+  document.getElementById('edicao-mes').value = d.mes || '';
+  document.getElementById('edicao-data').value = d.dataEnvio || '';
+
+  if (d.destaque) {
+    document.getElementById('d-status').value = d.destaque.status || 'NOVO';
+    document.getElementById('d-categoria').value = d.destaque.categoria || 'pesquisa';
+    document.getElementById('d-origem').value = d.destaque.origem || 'DPPGE';
+    document.getElementById('d-titulo').value = d.destaque.titulo || '';
+    document.getElementById('d-link').value = d.destaque.link || '';
+    document.getElementById('d-resumo').value = d.destaque.resumo || '';
+    document.getElementById('d-prazo').value = d.destaque.prazo || '';
+    document.getElementById('d-valor').value = d.destaque.valor || '';
+    document.getElementById('d-publico').value = d.destaque.publico || '';
+    document.getElementById('d-imagem').value = d.destaque.imagem || '';
+  }
+
+  ['pesquisa','internac','bolsas','evento','premiacoes','extensao'].forEach(cat => {
+    document.getElementById('cards-' + cat).innerHTML = '';
+    if (d.categorias && d.categorias[cat]) {
+      d.categorias[cat].forEach(c => addCard(cat, c));
+    }
+  });
+
+  document.getElementById('informes-list').innerHTML = '';
+  if (d.informes) d.informes.forEach(inf => addInforme(inf));
+
+  updatePreview();
+}
+
+// ════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════
+
+function filterByPeriod(hist, months) {
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - months);
+  return hist.filter(e => {
+    const parts = (e.dataEnvio || '').split('/');
+    if (parts.length === 3) {
+      const d = new Date(+parts[2], +parts[1]-1, +parts[0]);
+      return d >= cutoff;
+    }
+    return true;
+  });
+}
+
+function updateDashboard() {
+  const allHist = getHistorico();
+  const hist = filterByPeriod(allHist, currentPeriod);
+
+  let totalCards = 0;
+  const byCat = { pesquisa:0, internac:0, bolsas:0, evento:0, premiacoes:0, extensao:0 };
+  const byOrigem = {};
+  const byStatus = { 'NOVO':0, 'PRAZO PRÓXIMO':0, 'ÚLTIMOS DIAS':0, 'FLUXO CONTÍNUO':0 };
+  const byMonth = {};
+
+  hist.forEach(e => {
+    if (e.categorias) {
+      Object.entries(e.categorias).forEach(([cat, arr]) => {
+        byCat[cat] = (byCat[cat] || 0) + arr.length;
+        totalCards += arr.length;
+        arr.forEach(c => {
+          byOrigem[c.origem] = (byOrigem[c.origem] || 0) + 1;
+          byStatus[c.status] = (byStatus[c.status] || 0) + 1;
+        });
+      });
+    }
+    const parts = (e.dataEnvio || '').split('/');
+    if (parts.length === 3) {
+      const key = `${parts[1]}/${parts[2]}`;
+      byMonth[key] = (byMonth[key] || 0) + 1;
+    }
+  });
+
+  document.getElementById('kpi-boletins').textContent = hist.length;
+  document.getElementById('kpi-oportunidades').textContent = totalCards;
+
+  const topCat = Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0];
+  if (topCat && topCat[1] > 0) {
+    document.getElementById('kpi-top-cat').textContent = CATEGORIAS[topCat[0]]?.label || topCat[0];
+    document.getElementById('kpi-top-cat-n').textContent = `${topCat[1]} oportunidade(s)`;
+  } else {
+    document.getElementById('kpi-top-cat').textContent = '—';
+    document.getElementById('kpi-top-cat-n').textContent = '';
+  }
+
+  const topOrigem = Object.entries(byOrigem).sort((a,b)=>b[1]-a[1])[0];
+  if (topOrigem) {
+    document.getElementById('kpi-top-origem').textContent = topOrigem[0];
+    document.getElementById('kpi-top-origem-n').textContent = `${topOrigem[1]} publicação(ões)`;
+  } else {
+    document.getElementById('kpi-top-origem').textContent = '—';
+    document.getElementById('kpi-top-origem-n').textContent = '';
+  }
+
+  const catLabels = Object.keys(CATEGORIAS).map(k => CATEGORIAS[k].label);
+  const catValues = Object.keys(CATEGORIAS).map(k => byCat[k] || 0);
+  const catColors = ['#4A368F','#0149AF','#C2195A','#A03B11','#7A5B00','#006A5C'];
+
+  renderChart('chart-categoria', 'doughnut', catLabels, catValues, catColors);
+  renderChart('chart-status', 'bar',
+    Object.keys(byStatus), Object.values(byStatus),
+    ['#1B5E20','#F57F17','#C41E3A','#9E9E9E']
+  );
+
+  const monthKeys = Object.keys(byMonth).sort();
+  renderChart('chart-evolucao', 'bar', monthKeys, monthKeys.map(k => byMonth[k]), ['#196d1e']);
+
+  const origemKeys = Object.keys(byOrigem).slice(0, 8);
+  const origemVals = origemKeys.map(k => byOrigem[k]);
+  renderChart('chart-origem', 'bar', origemKeys, origemVals, ['#0c420b'], true);
+}
+
+function renderChart(id, type, labels, data, colors, horizontal = false) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type,
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors.length === data.length ? colors : colors[0],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: horizontal ? 'y' : 'x',
+      plugins: { legend: { display: type === 'doughnut', position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } },
+      scales: type !== 'doughnut' ? {
+        x: { ticks: { font: { size: 10 }, maxRotation: horizontal ? 0 : 40 }, grid: { display: false } },
+        y: { ticks: { font: { size: 10 } }, grid: { color: '#f0f0f0' } }
+      } : {},
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORTAR / IMPORTAR JSON
+// ════════════════════════════════════════════════════════
+
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
+
+const PROMPT_IA = `Você é um assistente especializado na newsletter "Radar de Oportunidades" da DPPGE do Ifes Campus Colatina.
+
+A partir dos dados que vou fornecer (link, texto ou PDF de um edital/oportunidade), gere um JSON no formato abaixo, pronto para importar no sistema.
+
+REGRAS DE ESCRITA DO RESUMO:
+- Comece sempre com o nome completo do edital/programa
+- Estrutura: "[Nome do edital/programa] visa/oferece/apoia [ação principal], destinado a [público-alvo]. [Detalhe operacional relevante, se houver]."
+- Máximo de 3 frases
+- Linguagem clara e objetiva
+
+STATUS disponíveis: "NOVO" | "PRAZO PRÓXIMO" | "ÚLTIMOS DIAS" | "FLUXO CONTÍNUO"
+
+CATEGORIAS disponíveis: "pesquisa" | "internac" | "bolsas" | "evento" | "premiacoes" | "extensao"
+
+ORIGENS disponíveis: "Coord. de Pesquisa" | "Coord. de Pós-Graduação" | "Coord. de Extensão" | "Coord. de Laboratórios" | "Coord. de Rel. Institucionais" | "Núcleo de Rel. Internacionais" | "Núcleo de Arte e Cultura" | "Núcleo de Ed. Ambiental" | "Núcleo de Incubação" | "DPPGE"
+
+Retorne APENAS o JSON, sem texto adicional, sem blocos de código.`;
+
+const MODELO_JSON = {
+  numero: "01",
+  mes: "Julho 2026",
+  dataEnvio: "01/07/2026",
+  destaque: {
+    status: "NOVO",
+    categoria: "pesquisa",
+    origem: "Coord. de Pesquisa",
+    titulo: "Nome do Edital Principal",
+    link: "https://link-do-edital",
+    resumo: "O Nome do Edital visa apoiar projetos de pesquisa institucionais. As propostas devem ser submetidas pelo sistema indicado, com análise por comitê gestor.",
+    prazo: "DD/MM/AAAA",
+    valor: "R$ 0.000",
+    publico: "Público-alvo",
+    imagem: ""
+  },
+  categorias: {
+    pesquisa: [{
+      status: "NOVO",
+      origem: "Coord. de Pesquisa",
+      titulo: "Nome do Edital",
+      link: "https://link",
+      resumo: "O Nome do Edital oferece... destinado a...",
+      prazo: "DD/MM/AAAA",
+      valor: "R$ 0.000",
+      publico: "Público-alvo",
+      imagem: ""
+    }],
+    internac: [], bolsas: [], evento: [], premiacoes: [], extensao: []
+  },
+  informes: [{
+    titulo: "Título do Informe",
+    texto: "Texto do comunicado institucional.",
+    email: "pesquisa.col@ifes.edu.br"
+  }]
+};
+
+// ════════════════════════════════════════════════════════
+// NAVEGAÇÃO E EVENTOS
+// ════════════════════════════════════════════════════════
+
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.remove('active'));
+  const viewEl = document.getElementById('view-' + name);
+  if (viewEl) viewEl.classList.add('active');
+  const navEl = document.querySelector(`.nav-item[data-view="${name}"]`);
+  if (navEl) navEl.classList.add('active');
+
+  const titles = { editor: '✏️ Editor de Boletim', historico: '📚 Histórico de Edições', dashboard: '📊 Dashboard de Comunicação' };
+  document.getElementById('topbar-title').textContent = titles[name] || '';
+
+  if (name === 'dashboard') updateDashboard();
+  if (name === 'historico') renderHistorico();
+}
+
+// Nav items
+document.querySelectorAll('.nav-item[data-view]').forEach(el => {
+  el.addEventListener('click', () => switchView(el.dataset.view));
+});
+
+// Sidebar toggle
+document.getElementById('toggleSidebar').addEventListener('click', () => {
+  const sb = document.getElementById('sidebar');
+  const collapsed = sb.classList.toggle('collapsed');
+  document.getElementById('toggleSidebar').textContent = collapsed ? '▶' : '◀ Recolher';
+});
+
+// Editor tabs
+document.querySelectorAll('.editor-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Add card buttons
+document.querySelectorAll('.add-card-btn[data-cat]').forEach(btn => {
+  btn.addEventListener('click', () => addCard(btn.dataset.cat));
+});
+
+document.getElementById('btn-add-informe').addEventListener('click', () => addInforme());
+
+// Campos de edição
+document.querySelectorAll('#tab-edicao input, #tab-destaque input, #tab-destaque select, #tab-destaque textarea').forEach(el => {
+  el.addEventListener('input', updatePreview);
+  el.addEventListener('change', updatePreview);
+});
+
+// Salvar
+document.getElementById('btn-salvar').addEventListener('click', salvarEdicao);
+
+// Exportar JSON atual
+document.getElementById('btn-exportar-json').addEventListener('click', () => {
+  const d = collectData();
+  downloadJSON(d, `radar_edicao_${d.numero || 'nova'}.json`);
+  toast('JSON exportado!');
+});
+
+// Gerar para Outlook — abre numa nova aba e mostra instruções
+document.getElementById('btn-copiar-html').addEventListener('click', () => {
+  const d = collectData();
+  const html = generateHTML(d);
+  // Salva no modal para uso posterior
+  document.getElementById('html-output').value = html;
+  // Abre numa nova aba com o boletim renderizado
+  const newTab = window.open('', '_blank');
+  newTab.document.open();
+  newTab.document.write(html);
+  newTab.document.close();
+  // Abre o modal com as instruções
+  document.getElementById('modal-html').classList.add('open');
+});
+
+document.getElementById('btn-abrir-aba').addEventListener('click', () => {
+  const html = document.getElementById('html-output').value;
+  if (!html) { toast('Gere o boletim primeiro.'); return; }
+  const newTab = window.open('', '_blank');
+  newTab.document.open();
+  newTab.document.write(html);
+  newTab.document.close();
+  toast('Nova aba aberta — Ctrl+A, Ctrl+C e cole no Outlook.');
+});
+
+document.getElementById('btn-fechar-html').addEventListener('click', () => {
+  document.getElementById('modal-html').classList.remove('open');
+});
+
+// Refresh preview
+document.getElementById('btn-refresh-preview').addEventListener('click', updatePreview);
+
+// Importar JSON
+document.getElementById('nav-importar').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+document.getElementById('file-input').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      loadData(data);
+      toast('JSON importado com sucesso!');
+      switchView('editor');
+    } catch { toast('Erro ao ler o arquivo JSON.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// Modal Modelo + Prompt IA
+document.getElementById('nav-modelo').addEventListener('click', () => {
+  document.getElementById('prompt-ia-text').textContent = PROMPT_IA;
+  document.getElementById('modelo-json-text').textContent = JSON.stringify(MODELO_JSON, null, 2);
+  document.getElementById('modal-modelo').classList.add('open');
+});
+document.getElementById('btn-fechar-modelo').addEventListener('click', () => {
+  document.getElementById('modal-modelo').classList.remove('open');
+});
+document.getElementById('btn-copiar-prompt').addEventListener('click', () => {
+  navigator.clipboard.writeText(PROMPT_IA).then(() => toast('Prompt copiado!')).catch(() => toast('Selecione e copie manualmente.'));
+});
+document.getElementById('btn-baixar-modelo').addEventListener('click', () => {
+  downloadJSON(MODELO_JSON, 'radar_modelo.json');
+  toast('Modelo JSON baixado!');
+});
+
+// Period filter
+document.querySelectorAll('.period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = +btn.dataset.months;
+    updateDashboard();
+  });
+});
+
+// Fechar modais clicando fora
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// ════════════════════════════════════════════════════════
+// INICIALIZAÇÃO
+// ════════════════════════════════════════════════════════
+updatePreview();
+renderHistorico();
+</script>
+</body>
+</html>
