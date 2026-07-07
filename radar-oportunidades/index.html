@@ -365,7 +365,7 @@ footer{background:var(--verde);color:#fff;padding:48px 0 28px}
 <div class="page" id="page-cat">
   <div class="page-cat-header">
     <div class="page-cat-header-in">
-      <button class="back-btn" onclick="irPara('home')">← Voltar</button>
+      <button class="back-btn" onclick="history.back()">← Voltar</button>
       <div class="page-cat-badge" id="cat-badge">
         <img id="cat-pg-icon" src="" alt="">
         <span class="page-cat-nome" id="cat-pg-nome"></span>
@@ -559,6 +559,7 @@ async function init() {
   if (dados) importarNoBanco(dados);
   renderTudo();
   iniciarIcons();
+  history.replaceState({page:'home'}, '', location.pathname+location.search);
 }
 
 function todas() {
@@ -726,7 +727,7 @@ function limparBuscaKw(){document.getElementById('busca-kw').value='';document.g
 // ═══════════════════════════════════════════════
 // PÁGINA CATEGORIA
 // ═══════════════════════════════════════════════
-function irCat(k) {
+function irCat(k, fromPopstate) {
   catAtiva=k;
   const c=CATS[k]; if(!c) return;
   const items=todas().filter(o=>o._cat===k&&o._urgencia!=='ENCERRADO');
@@ -746,9 +747,12 @@ function irCat(k) {
   document.getElementById('cat-status').value='';
   document.getElementById('cat-origem-f').value='';
   filtrarCat();
-  irPara('cat');
-  window.scrollTo({top:0,behavior:'instant'});
-  document.getElementById('page-cat').scrollTop=0;
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-cat').classList.add('active');
+  resetScroll();
+  if (!fromPopstate) {
+    history.pushState({page:'cat', cat:k}, '', location.pathname+location.search+'#cat-'+k);
+  }
 }
 
 function filtrarCat() {
@@ -839,12 +843,29 @@ function rc(id,type,labels,data,colors,horiz=false){
 // ═══════════════════════════════════════════════
 // NAVEGAÇÃO
 // ═══════════════════════════════════════════════
-function irPara(p) {
+function resetScroll() {
+  // Dupla rAF garante que o navegador já terminou de montar/pintar a página
+  // antes de zerar o scroll (evita abrir "no meio" ou no rodapé da página).
+  requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,0)));
+}
+
+function irPara(p, fromPopstate) {
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+(p==='cat'?'cat':p)).classList.add('active');
-  window.scrollTo(0,0);
   if(p==='dashboard') renderDash();
+  resetScroll();
+  if (!fromPopstate) {
+    const hash = p==='home' ? '' : '#'+p;
+    history.pushState({page:p}, '', location.pathname+location.search+hash);
+  }
 }
+
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if (!st || st.page==='home') irPara('home', true);
+  else if (st.page==='cat') irCat(st.cat, true);
+  else irPara(st.page, true);
+});
 
 function scrollTo(id) {
   setTimeout(()=>{
