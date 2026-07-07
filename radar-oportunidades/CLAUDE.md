@@ -10,30 +10,39 @@ O **Radar de Oportunidades** é um ecossistema de comunicação institucional da
 
 ---
 
-## Arquivos do projeto
+## Arquivos e pastas do projeto
 
-| Arquivo | Função |
+| Caminho | Função |
 |---|---|
-| `index.html` | Site público do portal de oportunidades (GitHub Pages) |
-| `dados.json` | Fonte única de dados — lido pelo site público |
-| `radar_sistema_dppge.html` | Sistema interno de gestão — editor, preview, histórico, dashboard |
+| `index.html` | Site público do portal de oportunidades (GitHub Pages) — lê `banco.json` |
+| `banco.json` | Acumulado real de **todas** as oportunidades já divulgadas — fonte única do site, gerado pelo script de mesclagem (nunca editar à mão) |
+| `radar_sistema_dppge.html` | Sistema interno de gestão — editor, preview, histórico, dashboard de uma edição |
+| `edicoes/ed-XX/dados.json` | JSON de uma edição específica do boletim (o que foi/será importado no editor) |
+| `edicoes/ed-XX/imagens/` | Imagens exclusivas daquela edição (referenciadas com caminho relativo à raiz de `radar-oportunidades/`, ex: `edicoes/ed-03/imagens/destaque.jpg`) |
+| `scripts/merge_edicao.py` | Funde o `dados.json` de uma edição no `banco.json` acumulado |
+
+**Importante:** `banco.json` ≠ `edicoes/ed-XX/dados.json`. O primeiro é a base pública e cumulativa do site (nunca perde oportunidades antigas); o segundo é o conteúdo de uma edição isolada do boletim (o que foi enviado por e-mail naquela ocasião).
 
 ---
 
 ## Fluxo de trabalho
 
 ```
-1. Abrir radar_sistema_dppge.html no navegador
-2. Preencher os dados da nova edição no editor
-3. Clicar em "Gerar para Outlook" → nova aba abre → Ctrl+A → Ctrl+C → colar no Outlook
-4. Exportar JSON da edição
-5. Substituir dados.json nesta pasta
-6. Commitar e fazer push → site público atualiza automaticamente
+1. Pesquisar oportunidades relevantes na web
+2. Fazer curadoria — decidir o que entra na edição
+3. Criar o JSON da edição em edicoes/ed-XX/dados.json
+   (imagens exclusivas da edição em edicoes/ed-XX/imagens/)
+4. Abrir radar_sistema_dppge.html → Importar JSON → editar/revisar no editor
+5. Salvar/ajustar → Exportar JSON → sobrescrever edicoes/ed-XX/dados.json
+6. Clicar em "Gerar para Outlook" → nova aba abre → Ctrl+A → Ctrl+C → colar no Outlook → enviar e-mail
+7. Atualizar o site: python3 scripts/merge_edicao.py edicoes/ed-XX
+   (funde a edição no banco.json acumulado, preservando tudo que já foi publicado)
+8. Commitar e fazer push → site público atualiza automaticamente
 ```
 
 ---
 
-## Estrutura de dados (dados.json)
+## Estrutura de dados (edicoes/ed-XX/dados.json)
 
 ```json
 {
@@ -83,6 +92,33 @@ O **Radar de Oportunidades** é um ecossistema de comunicação institucional da
   "publico": "...",
   "imagem": "https://github.com/...?raw=true (opcional)",
   "local": "... (só para categoria evento)"
+}
+```
+
+---
+
+## Estrutura de dados (banco.json)
+
+Gerado automaticamente por `scripts/merge_edicao.py` — nunca editar à mão. É uma lista plana (sem separação por edição), com `_cat` indicando a categoria e `dataCadastro` preservada entre mesclagens:
+
+```json
+{
+  "atualizadoEm": "07/07/2026",
+  "oportunidades": [
+    {
+      "_cat": "pesquisa",
+      "status": "NOVO",
+      "origem": "Coord. de Pesquisa",
+      "titulo": "Nome do Edital",
+      "link": "https://...",
+      "resumo": "...",
+      "prazo": "DD/MM/AAAA",
+      "valor": "R$ 0.000",
+      "publico": "Público-alvo",
+      "imagem": "",
+      "dataCadastro": "07/07/2026"
+    }
+  ]
 }
 ```
 
@@ -193,8 +229,8 @@ Sufixo obrigatório: `?raw=true`
 
 ### No site público (automático — dois eixos independentes)
 **Eixo 1 — Novidade** (baseado em `dataCadastro`):
-- NOVO = inserido no site há ≤ 20 dias
-- `dataCadastro` é adicionado automaticamente na primeira importação do JSON
+- NOVO = inserido no `banco.json` há ≤ 20 dias
+- `dataCadastro` é adicionado por `scripts/merge_edicao.py` na primeira vez que a oportunidade aparece em alguma edição
 
 **Eixo 2 — Urgência** (baseado no prazo):
 - ÚLTIMOS DIAS = prazo em ≤ 20 dias
@@ -203,7 +239,7 @@ Sufixo obrigatório: `?raw=true`
 
 Os dois status aparecem como pílulas lado a lado em cada oportunidade.
 
-**Deduplicação:** ao importar um novo JSON, o site verifica duplicidade pelo título normalizado. Se já existe, atualiza prazo/link mas preserva `dataCadastro` original.
+**Deduplicação:** ao rodar `scripts/merge_edicao.py`, o título normalizado é usado como chave. Se a oportunidade já existe no `banco.json`, atualiza prazo/link/valor/status mas preserva a `dataCadastro` original (garante que a badge "Novo" não reapareça em itens antigos republicados).
 
 ---
 

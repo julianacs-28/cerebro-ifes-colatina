@@ -508,74 +508,28 @@ function calcUrgencia(o) {
   return 'PRAZO PRÓXIMO';
 }
 
-// Chave única para deduplicação (título normalizado)
-function chaveOport(o) {
-  return (o.titulo || '').toLowerCase().trim().replace(/\s+/g,' ');
-}
-
-// Banco local de oportunidades (localStorage para persistir entre importações)
-function getBanco() {
-  try { return JSON.parse(localStorage.getItem('radar_banco') || '[]'); } catch { return []; }
-}
-function setBanco(b) { localStorage.setItem('radar_banco', JSON.stringify(b)); }
-
-// Sincroniza o banco local com o dados.json atual — preserva dataCadastro de itens
-// que já existiam (para a badge "Novo" continuar correta), mas descarta qualquer
-// item que não esteja mais no JSON (evita acúmulo de dados antigos/placeholder).
-function importarNoBanco(dadosJson) {
-  const bancoAntigo = getBanco();
-  const hoje = new Date();
-  const hojeStr = String(hoje.getDate()).padStart(2,'0')+'/'+String(hoje.getMonth()+1).padStart(2,'0')+'/'+hoje.getFullYear();
-  const mapaAntigo = new Map(bancoAntigo.map(o => [chaveOport(o), o]));
-
-  // Coleta todas as oportunidades do JSON
-  const todas = [];
-  if (dadosJson.destaque?.titulo) todas.push({...dadosJson.destaque, _cat: dadosJson.destaque.categoria||'pesquisa'});
-  Object.entries(dadosJson.categorias||{}).forEach(([c,a])=>{
-    if(Array.isArray(a)) a.forEach(o=>todas.push({...o,_cat:c}));
-  });
-
-  const bancoNovo = todas.map(o => {
-    const anterior = mapaAntigo.get(chaveOport(o));
-    return { ...o, dataCadastro: anterior?.dataCadastro || hojeStr };
-  });
-
-  setBanco(bancoNovo);
-  return bancoNovo.length;
-}
-
 // ═══════════════════════════════════════════════
 // DADOS
 // ═══════════════════════════════════════════════
+// O site lê banco.json: o acumulado real de todas as oportunidades já
+// publicadas (gerado por scripts/merge_edicao.py a cada nova edição do
+// boletim). Nada de localStorage aqui — o mesmo banco.json é a fonte
+// única para todo mundo que visita o site.
 let dados=null, catAtiva=null, filtroHome='todos', charts={};
 
 async function init() {
   try {
-    const res = await fetch('dados.json?t='+Date.now());
+    const res = await fetch('banco.json?t='+Date.now());
     if (!res.ok) throw 0;
     dados = await res.json();
   } catch { dados = demo(); }
-  // Importa no banco local (sem duplicar) e usa o banco para renderizar
-  if (dados) importarNoBanco(dados);
   renderTudo();
   iniciarIcons();
   history.replaceState({page:'home'}, '', location.pathname+location.search);
 }
 
 function todas() {
-  let lista;
-  const banco = getBanco();
-  if (banco.length > 0) {
-    lista = banco;
-  } else {
-    if (!dados) return [];
-    lista = [];
-    if (dados.destaque?.titulo) lista.push({...dados.destaque,_cat:dados.destaque.categoria||'pesquisa',dataCadastro:''});
-    Object.entries(dados.categorias||{}).forEach(([c,a])=>{
-      if(Array.isArray(a)) a.forEach(o=>lista.push({...o,_cat:c,dataCadastro:''}));
-    });
-  }
-  // Calcula os dois eixos em todas as oportunidades sempre
+  const lista = (dados?.oportunidades || []).map(o => ({...o}));
   lista.forEach(o => {
     o._urgencia = calcUrgencia(o);
     o._nova = calcNovidade(o);
@@ -601,9 +555,9 @@ function renderTudo() {
   document.getElementById('s-total').textContent = ativas.length;
   document.getElementById('s-novas').textContent = novas;
   document.getElementById('s-urgentes').textContent = urgentes;
-  const up = dados?.dataEnvio ? 'Edição de '+dados.mes+' · '+dados.dataEnvio : '';
-  document.getElementById('s-up').textContent = '';
-  document.getElementById('f-up').textContent = '';
+  const up = dados?.atualizadoEm ? 'Atualizado em '+dados.atualizadoEm : '';
+  document.getElementById('s-up').textContent = up;
+  document.getElementById('f-up').textContent = up;
   renderCats(ativas);
   renderOports('todos');
   popularFiltros(ativas);
@@ -795,7 +749,7 @@ function renderDash() {
   document.getElementById('d-total').textContent=t.length;
   document.getElementById('d-novas').textContent=t.filter(o=>o._nova).length;
   document.getElementById('d-urgentes').textContent=t.filter(o=>o._urgencia==='ÚLTIMOS DIAS'||o._urgencia==='PRAZO PRÓXIMO').length;
-  document.getElementById('dash-sub').textContent=dados?.mes ? 'Edição de '+dados.mes+' · '+t.length+' oportunidades ativas' : '';
+  document.getElementById('dash-sub').textContent=dados?.atualizadoEm ? 'Atualizado em '+dados.atualizadoEm+' · '+t.length+' oportunidades ativas' : '';
 
   const byCat={}; Object.keys(CATS).forEach(k=>byCat[k]=0);
   const byStatus={'NOVO':0,'PRAZO PRÓXIMO':0,'ÚLTIMOS DIAS':0,'FLUXO CONTÍNUO':0};
@@ -887,36 +841,24 @@ function demo(){
   const hoje=new Date();
   const d=(n)=>{ const d=new Date(hoje); d.setDate(d.getDate()+n); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };
   return {
-    numero:'01',mes:'Julho 2026',dataEnvio:'01/07/2026',
-    destaque:{status:'NOVO',categoria:'pesquisa',origem:'Coord. de Pesquisa',
-      titulo:'Edital PRPPG 10/2024 — Prociência',link:'#',
-      resumo:'O Edital PRPPG 10/2024 — Prociência apoia projetos de pesquisa institucionais no âmbito do Ifes. As propostas devem ser submetidas pelo sistema SIGPESq.',
-      prazo:d(45),valor:'Até R$ 250.000',publico:'Docentes e Técnicos'},
-    categorias:{
-      pesquisa:[
-        {status:'PRAZO PRÓXIMO',origem:'Coord. de Pesquisa',titulo:'Publicação de Artigos Técnico-Científicos — Fapes',link:'#',
-         resumo:'Auxílio financeiro para publicação em periódicos acadêmicos de alta qualidade.',prazo:d(6),valor:'Até US$ 1.500',publico:'Pesquisadores e Estudantes'},
-        {status:'NOVO',origem:'Coord. de Pesquisa',titulo:'Chamada MCTI/CNPq Nº 16/2024',link:'#',
-         resumo:'Fomenta projetos internacionais de pesquisa científica, tecnológica e de inovação.',prazo:d(50),valor:'R$ 215 milhões',publico:'Pesquisadores'},
-      ],
-      internac:[
-        {status:'NOVO',origem:'Núcleo de Rel. Internacionais',titulo:'Programa de Mobilidade Internacional',link:'#',
-         resumo:'Bolsas para intercâmbio acadêmico em instituições parceiras no exterior.',prazo:d(60),valor:'A definir',publico:'Estudantes'}
-      ],
-      bolsas:[
-        {status:'FLUXO CONTÍNUO',origem:'Coord. de Pesquisa',titulo:'Bolsa de Iniciação Científica — CNPq/Ifes',link:'#',
-         resumo:'Apoio financeiro mensal a estudantes de graduação em projetos de pesquisa.',prazo:'',valor:'R$ 700/mês',publico:'Estudantes de graduação'}
-      ],
-      evento:[
-        {status:'NOVO',origem:'DPPGE',titulo:'Semana de Ciência e Tecnologia 2026',link:'#',
-         resumo:'Programação especial com palestras, oficinas e exposições sobre inovação.',prazo:d(3),valor:'',publico:'Comunidade acadêmica',local:'Ifes Colatina'}
-      ],
-      premiacoes:[
-        {status:'NOVO',origem:'DPPGE',titulo:'Prêmio LED 2025 — Educação Transformadora',link:'#',
-         resumo:'Aberto a educadores, estudantes e empreendedores com iniciativas inovadoras.',prazo:d(40),valor:'R$ 1,2 milhão',publico:'Educadores e Estudantes'}
-      ],
-      extensao:[]
-    },informes:[]
+    atualizadoEm: d(0),
+    oportunidades: [
+      {_cat:'pesquisa',status:'NOVO',origem:'Coord. de Pesquisa',titulo:'Edital PRPPG 10/2024 — Prociência',link:'#',
+       resumo:'O Edital PRPPG 10/2024 — Prociência apoia projetos de pesquisa institucionais no âmbito do Ifes. As propostas devem ser submetidas pelo sistema SIGPESq.',
+       prazo:d(45),valor:'Até R$ 250.000',publico:'Docentes e Técnicos',dataCadastro:d(0)},
+      {_cat:'pesquisa',status:'PRAZO PRÓXIMO',origem:'Coord. de Pesquisa',titulo:'Publicação de Artigos Técnico-Científicos — Fapes',link:'#',
+       resumo:'Auxílio financeiro para publicação em periódicos acadêmicos de alta qualidade.',prazo:d(6),valor:'Até US$ 1.500',publico:'Pesquisadores e Estudantes',dataCadastro:d(0)},
+      {_cat:'pesquisa',status:'NOVO',origem:'Coord. de Pesquisa',titulo:'Chamada MCTI/CNPq Nº 16/2024',link:'#',
+       resumo:'Fomenta projetos internacionais de pesquisa científica, tecnológica e de inovação.',prazo:d(50),valor:'R$ 215 milhões',publico:'Pesquisadores',dataCadastro:d(0)},
+      {_cat:'internac',status:'NOVO',origem:'Núcleo de Rel. Internacionais',titulo:'Programa de Mobilidade Internacional',link:'#',
+       resumo:'Bolsas para intercâmbio acadêmico em instituições parceiras no exterior.',prazo:d(60),valor:'A definir',publico:'Estudantes',dataCadastro:d(0)},
+      {_cat:'bolsas',status:'FLUXO CONTÍNUO',origem:'Coord. de Pesquisa',titulo:'Bolsa de Iniciação Científica — CNPq/Ifes',link:'#',
+       resumo:'Apoio financeiro mensal a estudantes de graduação em projetos de pesquisa.',prazo:'',valor:'R$ 700/mês',publico:'Estudantes de graduação',dataCadastro:d(0)},
+      {_cat:'evento',status:'NOVO',origem:'DPPGE',titulo:'Semana de Ciência e Tecnologia 2026',link:'#',
+       resumo:'Programação especial com palestras, oficinas e exposições sobre inovação.',prazo:d(3),valor:'',publico:'Comunidade acadêmica',local:'Ifes Colatina',dataCadastro:d(0)},
+      {_cat:'premiacoes',status:'NOVO',origem:'DPPGE',titulo:'Prêmio LED 2025 — Educação Transformadora',link:'#',
+       resumo:'Aberto a educadores, estudantes e empreendedores com iniciativas inovadoras.',prazo:d(40),valor:'R$ 1,2 milhão',publico:'Educadores e Estudantes',dataCadastro:d(0)},
+    ]
   };
 }
 
