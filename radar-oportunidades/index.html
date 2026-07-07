@@ -123,11 +123,11 @@ section{padding:72px 0}
 .filtro-btn[data-f="todos"]{border-color:var(--verde);color:var(--verde)}
 .filtro-btn[data-f="todos"].ativo{background:var(--verde);color:#fff}
 .filtro-btn[data-f="novo"]{border-color:#1B5E20;color:#1B5E20;background:#e8f5e8}
-.filtro-btn[data-f="novo"].ativo{background:#1B5E20}
+.filtro-btn[data-f="novo"].ativo{background:#1B5E20;color:#fff}
 .filtro-btn[data-f="PRAZO PRÓXIMO"]{border-color:#F57F17;color:#F57F17;background:#fff8e1}
-.filtro-btn[data-f="PRAZO PRÓXIMO"].ativo{background:#F57F17}
+.filtro-btn[data-f="PRAZO PRÓXIMO"].ativo{background:#F57F17;color:#fff}
 .filtro-btn[data-f="ÚLTIMOS DIAS"]{border-color:#C41E3A;color:#C41E3A;background:#ffebee}
-.filtro-btn[data-f="ÚLTIMOS DIAS"].ativo{background:#C41E3A}
+.filtro-btn[data-f="ÚLTIMOS DIAS"].ativo{background:#C41E3A;color:#fff}
 .filtro-btn[data-f="FLUXO CONTÍNUO"]{border-color:#9E9E9E;color:#616161;background:#f5f5f5}
 .filtro-btn[data-f="FLUXO CONTÍNUO"].ativo{background:#9E9E9E;color:#fff}
 
@@ -578,7 +578,6 @@ function todas() {
   lista.forEach(o => {
     o._urgencia = calcUrgencia(o);
     o._nova = calcNovidade(o);
-    o._statusCalc = o._urgencia === 'ENCERRADO' ? 'ENCERRADO' : (o._nova ? 'NOVO' : o._urgencia);
   });
   return lista;
 }
@@ -595,9 +594,9 @@ function iniciarIcons() {
 // ═══════════════════════════════════════════════
 function renderTudo() {
   const t = todas();
-  const ativas = t.filter(o=>o._statusCalc!=='ENCERRADO');
-  const novas = ativas.filter(o=>o._statusCalc==='NOVO').length;
-  const urgentes = ativas.filter(o=>o._statusCalc==='ÚLTIMOS DIAS'||o._statusCalc==='PRAZO PRÓXIMO').length;
+  const ativas = t.filter(o=>o._urgencia!=='ENCERRADO');
+  const novas = ativas.filter(o=>o._nova).length;
+  const urgentes = ativas.filter(o=>o._urgencia==='ÚLTIMOS DIAS'||o._urgencia==='PRAZO PRÓXIMO').length;
   document.getElementById('s-total').textContent = ativas.length;
   document.getElementById('s-novas').textContent = novas;
   document.getElementById('s-urgentes').textContent = urgentes;
@@ -631,7 +630,7 @@ function popularFiltros(t) {
 // ═══════════════════════════════════════════════
 function renderCats(t) {
   document.getElementById('cats-grid').innerHTML = Object.entries(CATS).map(([k,c])=>{
-    const n = t.filter(o=>o._cat===k&&o._statusCalc!=='ENCERRADO').length;
+    const n = t.filter(o=>o._cat===k&&o._urgencia!=='ENCERRADO').length;
     return `<div class="cat-card" style="background:${c.bg};color:${c.cor};" onclick="irCat('${k}')">
       <img class="cat-icon" src="${IC[c.ic]}" alt="${c.label}">
       <div class="cat-nome">${c.label}</div>
@@ -654,8 +653,9 @@ function badgeHTML(status) {
 // ═══════════════════════════════════════════════
 function renderOports(filtro) {
   filtroHome = filtro;
-  let t = todas().filter(o=>o._statusCalc!=='ENCERRADO');
-  if (filtro!=='todos') t = t.filter(o=>o._statusCalc===filtro);
+  let t = todas().filter(o=>o._urgencia!=='ENCERRADO');
+  if (filtro==='novo') t = t.filter(o=>o._nova);
+  else if (filtro!=='todos') t = t.filter(o=>o._urgencia===filtro);
   const el = document.getElementById('oports-lista');
   if (!t.length) { el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><p>Nenhuma oportunidade encontrada.</p></div>'; return; }
   el.innerHTML = t.map(o=>oportCard(o)).join('');
@@ -676,7 +676,7 @@ function oportCard(o) {
       <div class="oport-titulo">${o.titulo||''}</div>
       <div class="oport-resumo">${o.resumo||''}</div>
       <div class="oport-dados">
-        ${o.prazo&&o._statusCalc!=='FLUXO CONTÍNUO'?`<span class="oport-dado"><img src="${IC.cal}" alt=""><strong>${o.prazo}</strong></span>`:''}
+        ${o.prazo&&o._urgencia!=='FLUXO CONTÍNUO'?`<span class="oport-dado"><img src="${IC.cal}" alt=""><strong>${o.prazo}</strong></span>`:''}
         ${o.valor?`<span class="oport-dado"><img src="${IC.din}" alt=""><strong>${o.valor}</strong></span>`:''}
         ${o.publico?`<span class="oport-dado"><img src="${IC.pub}" alt=""><strong>${o.publico}</strong></span>`:''}
       </div>
@@ -692,7 +692,7 @@ function buscarHome() {
   const kw = (document.getElementById('busca-kw').value||'').toLowerCase();
   const inst = (document.getElementById('busca-inst').value||'').toLowerCase();
   const cat = document.getElementById('busca-cat').value||'';
-  let t = todas().filter(o=>o._statusCalc!=='ENCERRADO');
+  let t = todas().filter(o=>o._urgencia!=='ENCERRADO');
   if (kw) t = t.filter(o=>((o.titulo||'')+(o.resumo||'')+(o.origem||'')).toLowerCase().includes(kw));
   if (inst) t = t.filter(o=>((o.titulo||'')+(o.resumo||'')+(o.origem||'')).toLowerCase().includes(inst));
   if (cat) t = t.filter(o=>o._cat===cat);
@@ -729,7 +729,7 @@ function limparBuscaKw(){document.getElementById('busca-kw').value='';document.g
 function irCat(k) {
   catAtiva=k;
   const c=CATS[k]; if(!c) return;
-  const items=todas().filter(o=>o._cat===k&&o._statusCalc!=='ENCERRADO');
+  const items=todas().filter(o=>o._cat===k&&o._urgencia!=='ENCERRADO');
   document.getElementById('cat-pg-icon').src=IC[c.ic];
   document.getElementById('cat-pg-icon').style.background=c.bg;
   document.getElementById('cat-pg-nome').textContent=c.label;
@@ -767,13 +767,14 @@ function filtrarCat() {
   el.innerHTML=t.map(o=>`<div class="oport-item" style="background:var(--branco)">
     <div>
       <div class="oport-topo">
-        ${badgeHTML(o._statusCalc||'NOVO')}
+        ${o._nova ? badgeHTML('NOVO') : ''}
+        ${o._urgencia && o._urgencia !== 'ENCERRADO' ? badgeHTML(o._urgencia) : ''}
         ${o.origem?`<span class="oport-origem">${o.origem.toUpperCase()}</span>`:''}
       </div>
       <div class="oport-titulo">${o.titulo||''}</div>
       <div class="oport-resumo" style="-webkit-line-clamp:3">${o.resumo||''}</div>
       <div class="oport-dados">
-        ${o.prazo&&o._statusCalc!=='FLUXO CONTÍNUO'?`<span class="oport-dado"><img src="${IC.cal}" alt=""><strong>${o.prazo}</strong></span>`:''}
+        ${o.prazo&&o._urgencia!=='FLUXO CONTÍNUO'?`<span class="oport-dado"><img src="${IC.cal}" alt=""><strong>${o.prazo}</strong></span>`:''}
         ${o.valor?`<span class="oport-dado"><img src="${IC.din}" alt=""><strong>${o.valor}</strong></span>`:''}
         ${o.publico?`<span class="oport-dado"><img src="${IC.pub}" alt=""><strong>${o.publico}</strong></span>`:''}
       </div>
@@ -786,10 +787,10 @@ function filtrarCat() {
 // DASHBOARD
 // ═══════════════════════════════════════════════
 function renderDash() {
-  const t=todas().filter(o=>o._statusCalc!=='ENCERRADO');
+  const t=todas().filter(o=>o._urgencia!=='ENCERRADO');
   document.getElementById('d-total').textContent=t.length;
-  document.getElementById('d-novas').textContent=t.filter(o=>o._statusCalc==='NOVO').length;
-  document.getElementById('d-urgentes').textContent=t.filter(o=>o._statusCalc==='ÚLTIMOS DIAS'||o._statusCalc==='PRAZO PRÓXIMO').length;
+  document.getElementById('d-novas').textContent=t.filter(o=>o._nova).length;
+  document.getElementById('d-urgentes').textContent=t.filter(o=>o._urgencia==='ÚLTIMOS DIAS'||o._urgencia==='PRAZO PRÓXIMO').length;
   document.getElementById('dash-sub').textContent=dados?.mes ? 'Edição de '+dados.mes+' · '+t.length+' oportunidades ativas' : '';
 
   const byCat={}; Object.keys(CATS).forEach(k=>byCat[k]=0);
@@ -797,7 +798,8 @@ function renderDash() {
   const byOrigem={};
   t.forEach(o=>{
     if(byCat[o._cat]!==undefined) byCat[o._cat]++;
-    if(byStatus[o._statusCalc]!==undefined) byStatus[o._statusCalc]++;
+    const statusUnico = o._nova ? 'NOVO' : o._urgencia;
+    if(byStatus[statusUnico]!==undefined) byStatus[statusUnico]++;
     if(o.origem){ byOrigem[o.origem]=(byOrigem[o.origem]||0)+1; }
   });
 
@@ -812,7 +814,7 @@ function renderDash() {
   rc('ch-status','bar',Object.keys(byStatus),Object.values(byStatus),['#1B5E20','#F57F17','#C41E3A','#9E9E9E']);
   const orKeys=Object.keys(byOrigem).sort((a,b)=>byOrigem[b]-byOrigem[a]).slice(0,8);
   rc('ch-origem','bar',orKeys,orKeys.map(k=>byOrigem[k]),['#196d1e'],true);
-  const fluxo=t.filter(o=>o._statusCalc==='FLUXO CONTÍNUO').length;
+  const fluxo=t.filter(o=>!o._nova && o._urgencia==='FLUXO CONTÍNUO').length;
   rc('ch-fluxo','doughnut',['Fluxo contínuo','Prazo definido'],[fluxo,t.length-fluxo],['#9E9E9E','#0c420b']);
 }
 
