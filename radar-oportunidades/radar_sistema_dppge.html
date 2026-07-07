@@ -1042,6 +1042,17 @@ function informeHTML(inf) {
   </table>`;
 }
 
+const SITE_URL = 'https://julianacs-28.github.io/cerebro-ifes-colatina/radar-oportunidades/';
+
+function siteBanner() {
+  return `<tr><td style="padding:14px 32px;border-top:1px solid #eeeeee;border-bottom:1px solid #eeeeee;text-align:center;">
+    <p style="margin:0;font-size:12px;color:#777777;font-family:'Segoe UI',Arial,sans-serif;line-height:20px;mso-line-height-rule:exactly;">
+      Veja essas e outras oportunidades a qualquer momento no
+      <a href="${SITE_URL}" style="color:#004aad;font-weight:bold;text-decoration:underline;">Radar de Oportunidades →</a>
+    </p>
+  </td></tr>`;
+}
+
 function collectData() {
   const num = getFieldVal('edicao-numero');
   const mes = getFieldVal('edicao-mes');
@@ -1160,7 +1171,9 @@ function generateHTML(d) {
   </tr></table>
 </td></tr>
 
-<tr><td style="padding:28px 32px 8px;">
+${siteBanner()}
+
+<tr><td style="padding:8px 32px 8px;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;"><tr>
     <td style="background-color:#e8f5e8;border-radius:6px;padding:10px 16px;">
       <table cellpadding="0" cellspacing="0" border="0"><tr>
@@ -1192,6 +1205,8 @@ function generateHTML(d) {
 
 ${sectionsHTML}
 ${informesHTML}
+
+${siteBanner()}
 
 <tr><td style="background-color:#0c420b;padding:22px 32px;text-align:center;">
   <p style="margin:0 0 3px 0;font-size:13px;font-weight:bold;color:#a8d8a8;font-family:'Segoe UI',Arial,sans-serif;">DPPGE — Diretoria de Pesquisa, Pós-Graduação e Extensão</p>
