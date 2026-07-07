@@ -844,9 +844,15 @@ function rc(id,type,labels,data,colors,horiz=false){
 // NAVEGAÇÃO
 // ═══════════════════════════════════════════════
 function resetScroll() {
-  // Dupla rAF garante que o navegador já terminou de montar/pintar a página
-  // antes de zerar o scroll (evita abrir "no meio" ou no rodapé da página).
-  requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,0)));
+  // Define scrollTop diretamente (sempre instantâneo, ignora o CSS
+  // scroll-behavior:smooth do <html>, que faria window.scrollTo(0,0) animar
+  // em vez de saltar — e a animação podia ser interrompida no meio do caminho).
+  const jump = () => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+  jump();
+  requestAnimationFrame(() => { jump(); requestAnimationFrame(jump); });
 }
 
 function irPara(p, fromPopstate) {
