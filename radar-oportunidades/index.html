@@ -153,6 +153,8 @@ section{padding:72px 0}
 .oport-dado strong{color:var(--preto);font-weight:600}
 .oport-link{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:1.5px solid var(--borda);border-radius:7px;font-size:13px;font-weight:600;color:var(--verde);white-space:nowrap;transition:all .18s;flex-shrink:0}
 .oport-link:hover{background:var(--verde);color:#fff;border-color:var(--verde)}
+.btn-carregar-mais{display:block;margin:8px auto 0;padding:11px 26px;background:var(--branco);color:var(--verde);border:1.5px solid var(--verde);border-radius:8px;font-family:var(--f);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-carregar-mais:hover{background:var(--verde);color:#fff}
 
 /* SOBRE */
 #sobre{background:var(--branco)}
@@ -647,16 +649,41 @@ function ordenarComEncerradoNoFim(lista) {
   return [...lista].sort((a,b)=>(a._urgencia==='ENCERRADO')-(b._urgencia==='ENCERRADO'));
 }
 
+// Insere o link do edital dentro do texto do resumo (mesma lógica do boletim)
+function resumoLinkado(o) {
+  if (o.link && o.titulo && o.resumo && o.resumo.includes(o.titulo)) {
+    return o.resumo.replace(o.titulo, `<a href="${o.link}" target="_blank" rel="noopener">${o.titulo}</a>`);
+  }
+  return o.resumo || '';
+}
+
+const ITENS_POR_PAGINA_HOME = 10;
+let listaHomeAtual = [];
+let paginaHome = 1;
+
 function renderOports(filtro) {
   filtroHome = filtro;
   let t = todas();
   if (filtro==='novo') t = t.filter(o=>o._nova);
-  else if (filtro!=='todos') t = t.filter(o=>o._urgencia===filtro);
+  else if (filtro==='todos') t = t.filter(o=>o._urgencia!=='ENCERRADO');
+  else t = t.filter(o=>o._urgencia===filtro);
   t = ordenarComEncerradoNoFim(t);
-  const el = document.getElementById('oports-lista');
-  if (!t.length) { el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><p>Nenhuma oportunidade encontrada.</p></div>'; return; }
-  el.innerHTML = t.map(o=>oportCard(o)).join('');
+  listaHomeAtual = t;
+  paginaHome = 1;
+  renderPaginaHome();
 }
+
+function renderPaginaHome() {
+  const el = document.getElementById('oports-lista');
+  if (!listaHomeAtual.length) { el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><p>Nenhuma oportunidade encontrada.</p></div>'; return; }
+  const visiveis = listaHomeAtual.slice(0, paginaHome*ITENS_POR_PAGINA_HOME);
+  const temMais = listaHomeAtual.length > visiveis.length;
+  el.innerHTML = visiveis.map(o=>oportCard(o)).join('') + (temMais ? '<button class="btn-carregar-mais" id="btn-carregar-mais">Carregar mais</button>' : '');
+}
+
+document.getElementById('oports-lista').addEventListener('click', e=>{
+  if (e.target.id==='btn-carregar-mais') { paginaHome++; renderPaginaHome(); }
+});
 
 function oportCard(o) {
   const c = CATS[o._cat]||CATS.pesquisa;
@@ -671,7 +698,7 @@ function oportCard(o) {
         ${o.origem?`<span class="oport-origem">${o.origem.toUpperCase()}</span>`:''}
       </div>
       <div class="oport-titulo">${o.link?`<a href="${o.link}" target="_blank" rel="noopener">${o.titulo||''}</a>`:(o.titulo||'')}</div>
-      <div class="oport-resumo">${o.resumo||''}</div>
+      <div class="oport-resumo">${resumoLinkado(o)}</div>
       <div class="oport-dados">
         ${o.prazo&&o._urgencia!=='FLUXO CONTÍNUO'?`<span class="oport-dado"><img src="${IC.cal}" alt=""><strong>${o.prazo}</strong></span>`:''}
         ${o.valor?`<span class="oport-dado"><img src="${IC.din}" alt=""><strong>${o.valor}</strong></span>`:''}
@@ -697,9 +724,10 @@ function buscarHome() {
   // Remove filtro de status se buscando
   document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('ativo'));
   document.querySelector('.filtro-btn[data-f="todos"]').classList.add('ativo');
-  const el = document.getElementById('oports-lista');
-  if (!t.length) { el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><p>Nenhum resultado encontrado para esta busca.</p></div>'; return; }
-  el.innerHTML = t.map(o=>oportCard(o)).join('');
+  listaHomeAtual = t;
+  paginaHome = 1;
+  if (!t.length) { document.getElementById('oports-lista').innerHTML='<div class="empty"><div class="empty-ico">🔍</div><p>Nenhum resultado encontrado para esta busca.</p></div>'; return; }
+  renderPaginaHome();
 }
 
 function limparBusca() {
@@ -774,7 +802,7 @@ function filtrarCat() {
         ${o.origem?`<span class="oport-origem">${o.origem.toUpperCase()}</span>`:''}
       </div>
       <div class="oport-titulo">${o.link?`<a href="${o.link}" target="_blank" rel="noopener">${o.titulo||''}</a>`:(o.titulo||'')}</div>
-      <div class="oport-resumo" style="-webkit-line-clamp:3">${o.resumo||''}</div>
+      <div class="oport-resumo" style="-webkit-line-clamp:3">${resumoLinkado(o)}</div>
       <div class="oport-dados">
         ${o.prazo&&o._urgencia!=='FLUXO CONTÍNUO'?`<span class="oport-dado"><img src="${IC.cal}" alt=""><strong>${o.prazo}</strong></span>`:''}
         ${o.valor?`<span class="oport-dado"><img src="${IC.din}" alt=""><strong>${o.valor}</strong></span>`:''}
