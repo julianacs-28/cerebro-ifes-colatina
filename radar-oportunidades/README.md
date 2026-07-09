@@ -2,8 +2,8 @@
 
 Guia de referência do fluxo de trabalho: da pesquisa de editais na web até a publicação no site. Para detalhes técnicos (design system, estrutura de JSON, regras de compatibilidade com Outlook), ver [CLAUDE.md](CLAUDE.md).
 
-**Site público:** https://julianacs-28.github.io/cerebro-ifes-colatina/radar-oportunidades/
-**Sistema interno (editor):** https://julianacs-28.github.io/cerebro-ifes-colatina/radar-oportunidades/radar_sistema_dppge.html
+**Site público:** https://julianacs-28.github.io/cerebro-dppge-colatina/radar-oportunidades/
+**Sistema interno (editor):** https://julianacs-28.github.io/cerebro-dppge-colatina/radar-oportunidades/radar_sistema_dppge.html
 
 ---
 

@@ -324,8 +324,8 @@ Portal web com GitHub Pages:
 - **Sobre DPPGE** com informações institucionais e contato
 - **Rodapé** verde com links de navegação
 
-**URL pública:** `https://julianacs-28.github.io/cerebro-ifes-colatina/radar-oportunidades/`  
-**Sistema interno:** `https://julianacs-28.github.io/cerebro-ifes-colatina/radar-oportunidades/radar_sistema_dppge.html`
+**URL pública:** `https://julianacs-28.github.io/cerebro-dppge-colatina/radar-oportunidades/`  
+**Sistema interno:** `https://julianacs-28.github.io/cerebro-dppge-colatina/radar-oportunidades/radar_sistema_dppge.html`
 
 ---
 
