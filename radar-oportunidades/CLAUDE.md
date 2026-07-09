@@ -345,6 +345,28 @@ Portal web com GitHub Pages:
 Quando receber dados de um edital (link, PDF ou texto), gerar JSON seguindo:
 
 ```
+FONTES A CONSULTAR (quando o pedido for "buscar oportunidades novas", não
+apenas transformar um edital específico já enviado):
+- https://fapes.es.gov.br/
+- https://www.gov.br/cnpq/pt-br
+- https://www.gov.br/capes/pt-br
+- http://portal.sbpcnet.org.br/
+- https://www.ifes.edu.br/
+- https://www.gov.br/inpe/pt-br
+- https://www.gov.br/mcti/pt-br
+- https://www.frm.org.br/
+- https://www.fundacaopetermuranyi.org.br/main.asp?pag=premioatual
+- https://fapesp.br/
+- https://fapemig.br/
+- https://www.gov.br/inpi/pt-br
+
+ATENÇÃO — oportunidades interestaduais: mesmo em fontes regionais de outros
+estados (ex.: Fapesp/SP, Fapemig/MG), verificar se o edital permite
+participação de pesquisadores/instituições de outros estados, incluindo o
+Espírito Santo — é comum haver chamadas nacionais publicadas por uma
+fundação estadual. Só descartar se o edital for explicitamente restrito a
+instituições daquele estado.
+
 STATUS disponíveis: "NOVO" | "PRAZO PRÓXIMO" | "ÚLTIMOS DIAS" | "FLUXO CONTÍNUO"
 CATEGORIAS: "pesquisa" | "internac" | "bolsas" | "evento" | "premiacoes" | "extensao"
 ORIGENS: [lista acima]

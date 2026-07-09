@@ -187,7 +187,11 @@ section{padding:72px 0}
 /* ── PÁGINA DASHBOARD ── */
 .dash-body{max-width:var(--max);margin:0 auto;padding:40px 32px}
 .dash-titulo{font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
-.dash-sub{font-size:15px;color:var(--ct);margin-bottom:32px}
+.dash-sub{font-size:15px;color:var(--ct);margin-bottom:20px}
+.periodo-filtro{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.periodo-btn{padding:7px 16px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font-size:13px;font-weight:600;cursor:pointer;color:var(--ct);transition:all .15s;font-family:var(--f)}
+.periodo-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.periodo-btn.ativo{background:var(--verde);color:#fff;border-color:var(--verde)}
 .kpi-row{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
 .kpi{background:var(--branco);border-radius:10px;padding:20px 22px;flex:1;min-width:150px;border:1px solid var(--borda)}
 .kpi-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cs);margin-bottom:8px}
@@ -421,16 +425,24 @@ footer{background:var(--verde);color:#fff;padding:48px 0 28px}
     <p class="sec-lb">Análise</p>
     <h2 class="dash-titulo">Dashboard de Oportunidades</h2>
     <p class="dash-sub" id="dash-sub"></p>
+    <div class="periodo-filtro" id="dash-periodo">
+      <button class="periodo-btn ativo" data-p="3">3 meses</button>
+      <button class="periodo-btn" data-p="6">6 meses</button>
+      <button class="periodo-btn" data-p="9">9 meses</button>
+      <button class="periodo-btn" data-p="12">12 meses</button>
+      <button class="periodo-btn" data-p="ano">Este ano</button>
+    </div>
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-lbl">Total de oportunidades</div><div class="kpi-val" id="d-total">—</div><div class="kpi-sub">na edição atual</div></div>
+      <div class="kpi"><div class="kpi-lbl">Total de oportunidades</div><div class="kpi-val" id="d-total">—</div><div class="kpi-sub">no período</div></div>
       <div class="kpi"><div class="kpi-lbl">Novas</div><div class="kpi-val" id="d-novas">—</div><div class="kpi-sub">inseridas há menos de 20 dias</div></div>
       <div class="kpi"><div class="kpi-lbl">Encerram em breve</div><div class="kpi-val" id="d-urgentes">—</div><div class="kpi-sub">prazo em menos de 20 dias</div></div>
       <div class="kpi"><div class="kpi-lbl">Categoria mais ativa</div><div class="kpi-val" style="font-size:15px" id="d-top-cat">—</div><div class="kpi-sub" id="d-top-cat-n"></div></div>
     </div>
     <div class="charts-grid">
       <div class="chart-card"><h3>Oportunidades por Categoria</h3><div class="chart-wrap"><canvas id="ch-cat"></canvas></div></div>
-      <div class="chart-card"><h3>Distribuição por Status</h3><div class="chart-wrap"><canvas id="ch-status"></canvas></div></div>
+      <div class="chart-card"><h3>Evolução mensal de publicações</h3><div class="chart-wrap"><canvas id="ch-evolucao"></canvas></div></div>
       <div class="chart-card"><h3>Por Coordenadoria / Núcleo</h3><div class="chart-wrap"><canvas id="ch-origem"></canvas></div></div>
+      <div class="chart-card"><h3>Distribuição por Status</h3><div class="chart-wrap"><canvas id="ch-status"></canvas></div></div>
       <div class="chart-card"><h3>Fluxo contínuo vs Prazo definido</h3><div class="chart-wrap"><canvas id="ch-fluxo"></canvas></div></div>
     </div>
   </div>
@@ -776,21 +788,53 @@ function filtrarCat() {
 // ═══════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════
+let dashPeriodo = 3;
+
+function filtrarPorPeriodo(lista, periodo) {
+  if (periodo === 'ano') {
+    const anoAtual = new Date().getFullYear();
+    return lista.filter(o=>{
+      const p=(o.dataCadastro||'').split('/');
+      return p.length===3 && +p[2]===anoAtual;
+    });
+  }
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth()-periodo);
+  return lista.filter(o=>{
+    const p=(o.dataCadastro||'').split('/');
+    if(p.length!==3) return true;
+    const d=new Date(+p[2],+p[1]-1,+p[0]);
+    return d>=cutoff;
+  });
+}
+
+document.getElementById('dash-periodo').addEventListener('click', e=>{
+  const b=e.target.closest('.periodo-btn'); if(!b) return;
+  document.querySelectorAll('#dash-periodo .periodo-btn').forEach(x=>x.classList.remove('ativo'));
+  b.classList.add('ativo');
+  dashPeriodo = b.dataset.p==='ano' ? 'ano' : +b.dataset.p;
+  renderDash();
+});
+
 function renderDash() {
-  const t=todas().filter(o=>o._urgencia!=='ENCERRADO');
+  const base=todas().filter(o=>o._urgencia!=='ENCERRADO');
+  const t=filtrarPorPeriodo(base, dashPeriodo);
   document.getElementById('d-total').textContent=t.length;
   document.getElementById('d-novas').textContent=t.filter(o=>o._nova).length;
   document.getElementById('d-urgentes').textContent=t.filter(o=>o._urgencia==='ÚLTIMOS DIAS'||o._urgencia==='PRAZO PRÓXIMO').length;
-  document.getElementById('dash-sub').textContent=dados?.atualizadoEm ? 'Atualizado em '+dados.atualizadoEm+' · '+t.length+' oportunidades ativas' : '';
+  document.getElementById('dash-sub').textContent=dados?.atualizadoEm ? 'Atualizado em '+dados.atualizadoEm+' · '+t.length+' oportunidades no período selecionado' : '';
 
   const byCat={}; Object.keys(CATS).forEach(k=>byCat[k]=0);
   const byStatus={'NOVO':0,'PRAZO PRÓXIMO':0,'ÚLTIMOS DIAS':0,'FLUXO CONTÍNUO':0};
   const byOrigem={};
+  const byMonth={};
   t.forEach(o=>{
     if(byCat[o._cat]!==undefined) byCat[o._cat]++;
     const statusUnico = o._nova ? 'NOVO' : o._urgencia;
     if(byStatus[statusUnico]!==undefined) byStatus[statusUnico]++;
     if(o.origem){ byOrigem[o.origem]=(byOrigem[o.origem]||0)+1; }
+    const p=(o.dataCadastro||'').split('/');
+    if(p.length===3){ const key=p[1]+'/'+p[2]; byMonth[key]=(byMonth[key]||0)+1; }
   });
 
   const topCat=Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0];
@@ -804,6 +848,8 @@ function renderDash() {
   rc('ch-status','bar',Object.keys(byStatus),Object.values(byStatus),['#1B5E20','#F57F17','#C41E3A','#1565C0']);
   const orKeys=Object.keys(byOrigem).sort((a,b)=>byOrigem[b]-byOrigem[a]).slice(0,8);
   rc('ch-origem','bar',orKeys,orKeys.map(k=>byOrigem[k]),['#196d1e'],true);
+  const monthKeys=Object.keys(byMonth).sort();
+  rc('ch-evolucao','bar',monthKeys,monthKeys.map(k=>byMonth[k]),['#196d1e']);
   const fluxo=t.filter(o=>!o._nova && o._urgencia==='FLUXO CONTÍNUO').length;
   rc('ch-fluxo','doughnut',['Fluxo contínuo','Prazo definido'],[fluxo,t.length-fluxo],['#1565C0','#0c420b']);
 }

@@ -697,6 +697,7 @@
         <button class="period-btn" data-months="6">6 meses</button>
         <button class="period-btn" data-months="9">9 meses</button>
         <button class="period-btn" data-months="12">12 meses</button>
+        <button class="period-btn" data-months="ano">Este ano</button>
       </div>
     </div>
 
@@ -1424,6 +1425,13 @@ function loadData(d) {
 // ════════════════════════════════════════════════════════
 
 function filterByPeriod(hist, months) {
+  if (months === 'ano') {
+    const anoAtual = new Date().getFullYear();
+    return hist.filter(e => {
+      const parts = (e.dataEnvio || '').split('/');
+      return parts.length === 3 && +parts[2] === anoAtual;
+    });
+  }
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - months);
   return hist.filter(e => {
@@ -1542,11 +1550,28 @@ const PROMPT_IA = `Você é um assistente especializado na newsletter "Radar de 
 
 A partir dos dados que vou fornecer (link, texto ou PDF de um edital/oportunidade), gere um JSON no formato abaixo, pronto para importar no sistema.
 
+FONTES A CONSULTAR (sempre que eu pedir para você buscar oportunidades novas, e não apenas transformar um edital específico que eu já enviei):
+- https://fapes.es.gov.br/
+- https://www.gov.br/cnpq/pt-br
+- https://www.gov.br/capes/pt-br
+- http://portal.sbpcnet.org.br/
+- https://www.ifes.edu.br/
+- https://www.gov.br/inpe/pt-br
+- https://www.gov.br/mcti/pt-br
+- https://www.frm.org.br/
+- https://www.fundacaopetermuranyi.org.br/main.asp?pag=premioatual
+- https://fapesp.br/
+- https://fapemig.br/
+- https://www.gov.br/inpi/pt-br
+
+ATENÇÃO — oportunidades interestaduais: mesmo em fontes de fomento regionais de outros estados (ex.: Fapesp/SP, Fapemig/MG), verifique se o edital permite a participação de pesquisadores e instituições de outros estados, incluindo o Espírito Santo — é comum haver chamadas nacionais ou cooperações abertas a todo o país mesmo quando publicadas por uma fundação estadual. Não descarte uma oportunidade só porque a fonte é de outro estado; descarte apenas se o edital for explicitamente restrito a instituições daquele estado.
+
 REGRAS DE ESCRITA DO RESUMO:
 - Comece sempre com o nome completo do edital/programa
 - Estrutura: "[Nome do edital/programa] visa/oferece/apoia [ação principal], destinado a [público-alvo]. [Detalhe operacional relevante, se houver]."
 - Máximo de 3 frases
 - Linguagem clara e objetiva
+- CRÍTICO: o texto do resumo deve reproduzir o nome do edital/programa EXATAMENTE como está no campo "titulo" (mesmos caracteres, incluindo sufixos como "— Fapes" ou "(Edital X/2026)") — copie e cole o título, não o parafraseie. O link dentro do resumo (no boletim) e o link do título (no site) são inseridos por correspondência exata de texto; um título parafraseado ou abreviado faz o link falhar silenciosamente.
 
 STATUS disponíveis: "NOVO" | "PRAZO PRÓXIMO" | "ÚLTIMOS DIAS" | "FLUXO CONTÍNUO" | "" (sem status — só para destaque institucional, ver abaixo)
 
@@ -1735,7 +1760,7 @@ document.querySelectorAll('.period-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    currentPeriod = +btn.dataset.months;
+    currentPeriod = btn.dataset.months === 'ano' ? 'ano' : +btn.dataset.months;
     updateDashboard();
   });
 });
