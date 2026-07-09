@@ -227,6 +227,17 @@ Sufixo obrigatório: `?raw=true`
 **Exemplo correto:**
 > O [Edital PRPPG 10/2024 — Prociência](link) apoia projetos de pesquisa institucionais no âmbito do Ifes. As propostas devem ser submetidas pelo sistema SIGPESq, com análise por comitê gestor que avalia currículo Lattes e produção técnico-científica recente.
 
+**⚠️ Regra crítica — o `resumo` deve conter o `titulo` EXATO (caractere a caractere):**
+
+O link dentro do resumo não é markdown — é gerado automaticamente. Tanto o boletim (`radar_sistema_dppge.html`, via `resumo.replace(titulo, ...)`) quanto o site (`index.html`, que linka o `.oport-titulo` inteiro com `o.link`) dependem do texto do `resumo` **conter a string do `titulo` de forma idêntica**, incluindo sufixos como "— Fapes", "(Edital 18/2026)", "— Programa X". Se o resumo usar uma versão abreviada, parafraseada ou reordenada do título, o `.replace()` não encontra a ocorrência e **falha silenciosamente** — sem erro, mas também sem link no meio do texto.
+
+Checklist antes de salvar um card:
+- [ ] Copiar o `titulo` literalmente (copiar/colar, não reescrever) para dentro da primeira frase do `resumo`
+- [ ] Não abreviar, não reordenar, não remover sufixos do título ao mencioná-lo no resumo
+- [ ] Conferir com `titulo in resumo` (Python) ou busca de texto simples antes de publicar
+
+Isso já causou o problema real na ed-01, onde vários resumos mencionavam apenas uma versão curta do título (ex.: título "Parcerias entre Startups — Fapes (Edital 18/2026)" mas resumo começando com "O Edital Fapes Nº 18/2026...") — o link nunca aparecia no meio do texto, nem no boletim nem no site.
+
 ---
 
 ## Lógica de status
@@ -340,6 +351,14 @@ ORIGENS: [lista acima]
 
 FÓRMULA DO RESUMO:
 [Nome do edital, que será linkado] visa/oferece/apoia [ação], destinado a [público]. [Detalhe operacional].
+
+REGRA CRÍTICA: o texto de "resumo" deve conter o valor de "titulo" REPRODUZIDO
+EXATAMENTE (mesmos caracteres, incluindo sufixos como "— Fapes" ou
+"(Edital X/2026)"), pois o link dentro do resumo é inserido por substituição
+de string exata (resumo.replace(titulo, ...)) tanto no boletim quanto no
+site. Título abreviado, parafraseado ou reordenado = link não aparece.
+Copie o título literalmente para dentro da primeira frase do resumo, não o
+reescreva.
 
 Retornar APENAS o JSON, sem texto adicional.
 ```
