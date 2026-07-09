@@ -49,7 +49,9 @@ nav a.active{color:#fff;font-weight:700}
 .hero-in{max-width:var(--max);margin:0 auto;padding:0 32px;display:flex;align-items:center;gap:48px}
 .hero-txt{flex:1}
 .hero-ey{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#7ec87e;margin-bottom:16px}
-.hero h1{font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-1px;margin-bottom:20px}
+.hero h1{font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-1px}
+.hero-title-row{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.hero-title-icon{height:clamp(70px,8.8vw,106px);width:auto}
 
 .hero p{font-size:17px;color:#c8e6c8;line-height:1.65;max-width:480px;margin-bottom:32px}
 .hero-acts{display:flex;gap:12px;flex-wrap:wrap}
@@ -70,7 +72,7 @@ nav a.active{color:#fff;font-weight:700}
 
 /* SEÇÃO */
 section{padding:72px 0}
-.sec-lb{font-size:16px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--verde-m);margin-bottom:10px}
+.sec-lb{font-size:16px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--verde-m);margin-bottom:2px}
 .sec-ti{font-size:clamp(26px,3vw,36px);font-weight:800;letter-spacing:-.5px;color:var(--preto);margin-bottom:10px}
 .sec-de{font-size:16px;color:var(--ct);max-width:520px;line-height:1.65}
 .sec-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;gap:24px;flex-wrap:wrap}
@@ -256,11 +258,11 @@ footer{background:var(--verde);color:#fff;padding:48px 0 28px}
       <img class="logo-ifes" src="https://github.com/julianacs-28/radar-oportunidades-imagens/blob/main/colatina-horizontal-branco.png?raw=true" alt="Ifes Campus Colatina">
     </div>
     <nav>
-      <a onclick="irPara('home');scrollTo('#categorias')" id="nav-cats">Categorias</a>
-      <a onclick="irPara('home');scrollTo('#recentes')" id="nav-oports">Oportunidades</a>
+      <a onclick="irPara('home');scrollToSecao('#categorias')" id="nav-cats">Categorias</a>
+      <a onclick="irPara('home');scrollToSecao('#recentes')" id="nav-oports">Oportunidades</a>
       <a onclick="irPara('dashboard')" id="nav-dash">Dashboard</a>
-      <a onclick="irPara('home');scrollTo('#sobre')" id="nav-sobre">Sobre</a>
-      <a href="mailto:pesquisa.col@ifes.edu.br" class="nav-cta">Fale conosco</a>
+      <a onclick="irPara('home');scrollToSecao('#sobre')" id="nav-sobre">Sobre</a>
+      <a href="mailto:pesquisa.col@ifes.edu.br" class="nav-cta" title="Entre em contato pelo e-mail pesquisa.col@ifes.edu.br">Fale conosco</a>
     </nav>
   </div>
 </header>
@@ -272,7 +274,10 @@ footer{background:var(--verde);color:#fff;padding:48px 0 28px}
     <div class="hero-in">
       <div class="hero-txt">
         <p class="hero-ey">DPPGE · Ifes Campus Colatina</p>
-        <h1>Radar de<br>Oportunidades</h1>
+        <div class="hero-title-row">
+          <img class="hero-title-icon" src="https://github.com/julianacs-28/radar-oportunidades-imagens/blob/main/radar-oportunidades.png?raw=true" alt="">
+          <h1>Radar de<br>Oportunidades</h1>
+        </div>
         <p>Editais, bolsas, fomento e oportunidades acadêmicas reunidos em um só lugar — atualizados pela Diretoria de Pesquisa, Pós-Graduação e Extensão.</p>
         <div class="hero-acts">
           <button class="btn-h btn-h-p" onclick="document.getElementById('recentes').scrollIntoView({behavior:'smooth'})">Ver oportunidades</button>
@@ -452,7 +457,7 @@ footer{background:var(--verde);color:#fff;padding:48px 0 28px}
       <div class="footer-links">
         <h4>Links</h4>
         <a href="https://ifes.edu.br" target="_blank">Ifes</a>
-        <a href="mailto:pesquisa.col@ifes.edu.br">Fale conosco</a>
+        <a href="mailto:pesquisa.col@ifes.edu.br" title="Entre em contato pelo e-mail pesquisa.col@ifes.edu.br">Fale conosco</a>
         <a onclick="irPara('dashboard')">Dashboard</a>
       </div>
     </div>
@@ -852,7 +857,7 @@ window.addEventListener('popstate', e => {
   else irPara(st.page, true);
 });
 
-function scrollTo(id) {
+function scrollToSecao(id) {
   setTimeout(()=>{
     const el=document.querySelector(id);
     if(el) el.scrollIntoView({behavior:'smooth'});
