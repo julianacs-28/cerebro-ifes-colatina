@@ -812,6 +812,7 @@ const ICONS = {
   premiacoes: GH + 'premiacoes.png' + RAW,
   extensao:   GH + 'comunidade_extensao.png' + RAW,
   informes:   GH + 'informes.png' + RAW,
+  ifesLogo:   GH + 'colatina-horizontal-branco.png' + RAW,
 };
 
 const CATEGORIAS = {
@@ -1141,17 +1142,12 @@ function generateHTML(d) {
 <!--[if mso]><table width="620" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
 <table width="620" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:620px;width:620px;background-color:#ffffff;overflow:hidden;margin:0 auto;text-align:left;">
 
-<tr><td style="background-color:#196d1e;padding:10px 32px;text-align:center;">
-  <p style="margin:0 0 2px 0;font-size:13px;font-weight:bold;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;">Diretoria de Pesquisa, Pós-Graduação e Extensão</p>
-  <p style="margin:0;font-size:11px;color:#a8d8a8;letter-spacing:1.5px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">DPPGE &nbsp;·&nbsp; Ifes Campus Colatina</p>
-</td></tr>
-
 <tr><td style="background-color:#0c420b;padding:24px 32px;">
   <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>
-    <td style="vertical-align:middle;padding-right:20px;"><img src="${ICONS.radar}" width="80" height="80" alt="Radar" style="display:block;border:0;"></td>
+    <td style="vertical-align:middle;padding-right:20px;"><img src="${ICONS.radar}" width="92" height="92" alt="Radar" style="display:block;border:0;"></td>
     <td style="vertical-align:middle;text-align:left;">
-      <p style="margin:0;font-size:36px;font-weight:bold;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:-0.5px;line-height:46px;mso-line-height-rule:exactly;">Radar<br>de Oportunidades</p>
-      <p style="margin:8px 0 0 0;font-size:11px;color:#a8d8a8;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0.5px;">Editais &nbsp;·&nbsp; Bolsas &nbsp;·&nbsp; Fomento &nbsp;·&nbsp; Oportunidades acadêmicas</p>
+      <p style="margin:0;font-size:36px;font-weight:bold;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:-0.5px;line-height:38px;mso-line-height-rule:exactly;">Radar<br>de Oportunidades</p>
+      <p style="margin:4px 0 0 0;font-size:11px;color:#a8d8a8;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0.5px;">Editais &nbsp;·&nbsp; Bolsas &nbsp;·&nbsp; Fomento &nbsp;·&nbsp; Oportunidades acadêmicas</p>
     </td>
   </tr></table>
 </td></tr>
@@ -1209,9 +1205,13 @@ ${informesHTML}
 ${siteBanner()}
 
 <tr><td style="background-color:#0c420b;padding:22px 32px;text-align:center;">
-  <p style="margin:0 0 3px 0;font-size:13px;font-weight:bold;color:#a8d8a8;font-family:'Segoe UI',Arial,sans-serif;">DPPGE — Diretoria de Pesquisa, Pós-Graduação e Extensão</p>
-  <p style="margin:0 0 1px 0;font-size:12px;color:#7ec87e;font-family:'Segoe UI',Arial,sans-serif;">Instituto Federal do Espírito Santo</p>
-  <p style="margin:0 0 12px 0;font-size:12px;color:#7ec87e;font-family:'Segoe UI',Arial,sans-serif;">Ifes Campus Colatina</p>
+  <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr>
+    <td style="vertical-align:middle;padding-right:18px;"><img src="${ICONS.ifesLogo}" width="135" alt="Ifes Campus Colatina" style="display:block;height:auto;border:0;"></td>
+    <td width="1" height="40" bgcolor="#2a5a28" style="font-size:0;line-height:0;">&nbsp;</td>
+    <td style="vertical-align:middle;text-align:left;padding-left:18px;">
+      <p style="margin:0;font-size:13px;font-weight:bold;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;line-height:17px;mso-line-height-rule:exactly;">DPPGE<br>Diretoria de Pesquisa, Pós-Graduação e Extensão</p>
+    </td>
+  </tr></table>
   <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:1px solid #2a5a28;padding-top:12px;"></td></tr></table>
   <p style="margin:0 0 6px 0;font-size:11px;color:#5aaa5a;font-family:'Segoe UI',Arial,sans-serif;">pesquisa.col@ifes.edu.br &nbsp;·&nbsp; ifes.edu.br/colatina</p>
   <p style="margin:0;font-size:10px;color:#3a6a3a;font-family:'Segoe UI',Arial,sans-serif;line-height:34px;mso-line-height-rule:exactly;">Esta mensagem é destinada à comunidade acadêmica do Ifes Campus Colatina.<br>A divulgação não autorizada é proibida conforme normas internas da instituição.</p>
