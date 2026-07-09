@@ -542,6 +542,7 @@
             <div class="field">
               <label>Status</label>
               <select id="d-status">
+                <option value="">— Sem status —</option>
                 <option value="NOVO">🟢 NOVO</option>
                 <option value="PRAZO PRÓXIMO">🟡 PRAZO PRÓXIMO</option>
                 <option value="ÚLTIMOS DIAS">🔴 ÚLTIMOS DIAS</option>
@@ -551,6 +552,7 @@
             <div class="field">
               <label>Categoria</label>
               <select id="d-categoria">
+                <option value="">— Sem categoria —</option>
                 <option value="pesquisa">🔍 Pesquisa & Fomento</option>
                 <option value="internac">🌐 Internacionalização</option>
                 <option value="bolsas">💰 Bolsas & Auxílios</option>
@@ -882,6 +884,7 @@ function origemSelect(selected = '') {
 function statusSelect(selected = 'NOVO') {
   const opts = ['NOVO','PRAZO PRÓXIMO','ÚLTIMOS DIAS','FLUXO CONTÍNUO'];
   return `<select class="card-status" style="width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:4px;font-size:13px;font-family:inherit;">
+    <option value="" ${selected === '' ? 'selected' : ''}>— Sem status —</option>
     ${opts.map(o => `<option ${o === selected ? 'selected' : ''}>${o}</option>`).join('')}
   </select>`;
 }
@@ -956,6 +959,7 @@ function addInforme(data = {}) {
 // ════════════════════════════════════════════════════════
 
 function badgeStatus(status) {
+  if (!status) return '';
   const s = STATUS_MAP[status] || STATUS_MAP['NOVO'];
   return `<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;border-collapse:separate;">
     <tr><td style="background-color:${s.bg};border:1.5px solid ${s.border};border-radius:14px;padding:4px 12px 4px 8px;mso-padding-alt:4px 12px 4px 8px;">
@@ -967,16 +971,21 @@ function badgeStatus(status) {
   </table>`;
 }
 
-function badgeOrigem(origem) {
+function badgeOrigem(origem, comBorda = true) {
   return `<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;">
     <tr>
-      <td style="border-left:1px solid #cccccc;padding:0;font-size:0;line-height:0;">&nbsp;</td>
-      <td style="padding-left:12px;vertical-align:middle;"><span style="font-size:11px;font-weight:normal;color:#888888;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0.5px;text-transform:uppercase;">${origem.toUpperCase()}</span></td>
+      ${comBorda ? `<td style="border-left:1px solid #cccccc;padding:0;font-size:0;line-height:0;">&nbsp;</td>` : ''}
+      <td style="padding-left:${comBorda ? '12px' : '0'};vertical-align:middle;"><span style="font-size:11px;font-weight:normal;color:#888888;font-family:'Segoe UI',Arial,sans-serif;letter-spacing:0.5px;text-transform:uppercase;">${origem.toUpperCase()}</span></td>
     </tr>
   </table>`;
 }
 
 function badgesRow(status, origem) {
+  if (!status) {
+    return `<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+      <tr><td style="vertical-align:middle;">${badgeOrigem(origem, false)}</td></tr>
+    </table>`;
+  }
   return `<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
     <tr>
       <td style="vertical-align:middle;white-space:nowrap;padding-right:12px;">${badgeStatus(status)}</td>
@@ -1070,8 +1079,8 @@ function collectData() {
   const data = getFieldVal('edicao-data');
 
   const destaque = {
-    status: document.getElementById('d-status')?.value || 'NOVO',
-    categoria: document.getElementById('d-categoria')?.value || 'pesquisa',
+    status: document.getElementById('d-status')?.value ?? '',
+    categoria: document.getElementById('d-categoria')?.value ?? '',
     origem: document.getElementById('d-origem')?.value || 'DPPGE',
     titulo: getFieldVal('d-titulo'),
     link: getFieldVal('d-link'),
@@ -1089,7 +1098,7 @@ function collectData() {
     cats[cat] = [];
     document.querySelectorAll(`#cards-${cat} .card-block`).forEach(block => {
       cats[cat].push({
-        status: block.querySelector('.card-status')?.value || 'NOVO',
+        status: block.querySelector('.card-status')?.value ?? '',
         origem: block.querySelector('.card-origem')?.value || 'DPPGE',
         titulo: block.querySelector('.card-titulo')?.value || '',
         link: block.querySelector('.card-link')?.value || '',
@@ -1117,7 +1126,7 @@ function collectData() {
 
 function generateHTML(d) {
   const dData = d.destaque;
-  const catDest = CATEGORIAS[dData.categoria] || CATEGORIAS.pesquisa;
+  const catDest = dData.categoria ? CATEGORIAS[dData.categoria] : null;
   const linkStyle = `color:#004aad;text-decoration:underline;font-weight:600;`;
   const resumoDestLinkado = dData.link ? dData.resumo.replace(dData.titulo, `<a href="${dData.link}" style="${linkStyle}">${dData.titulo}</a>`) : dData.resumo;
 
@@ -1193,10 +1202,10 @@ ${siteBanner()}
 
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fcf8;border-left:4px solid #1B5E20;border-radius:0 5px 5px 0;"><tr>
     <td style="padding:20px 22px;text-align:left;">
-      <p style="margin:0 0 6px 0;font-size:11px;font-weight:bold;color:${catDest.cor};letter-spacing:1px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">
+      ${catDest ? `<p style="margin:0 0 6px 0;font-size:11px;font-weight:bold;color:${catDest.cor};letter-spacing:1px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">
         <img src="${ICONS[catDest.icon]}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin-right:5px;border:0;" alt="">
         ${catDest.label}
-      </p>
+      </p>` : ''}
       ${badgesRow(dData.status, dData.origem)}
       <p style="margin:0 0 8px 0;font-size:21px;font-weight:bold;color:#0c420b;font-family:'Segoe UI',Arial,sans-serif;line-height:32px;mso-line-height-rule:exactly;">${dData.titulo}</p>
       ${dData.imagem ? `<img src="${dData.imagem}" width="556" alt="Imagem destaque" style="display:block;width:100%;max-width:556px;height:auto;border-radius:4px;border:0;margin-bottom:12px;">` : ''}
@@ -1383,8 +1392,8 @@ function loadData(d) {
   document.getElementById('edicao-data').value = d.dataEnvio || '';
 
   if (d.destaque) {
-    document.getElementById('d-status').value = d.destaque.status || 'NOVO';
-    document.getElementById('d-categoria').value = d.destaque.categoria || 'pesquisa';
+    document.getElementById('d-status').value = d.destaque.status ?? 'NOVO';
+    document.getElementById('d-categoria').value = d.destaque.categoria ?? 'pesquisa';
     document.getElementById('d-origem').value = d.destaque.origem || 'DPPGE';
     document.getElementById('d-titulo').value = d.destaque.titulo || '';
     document.getElementById('d-link').value = d.destaque.link || '';
@@ -1539,9 +1548,11 @@ REGRAS DE ESCRITA DO RESUMO:
 - Máximo de 3 frases
 - Linguagem clara e objetiva
 
-STATUS disponíveis: "NOVO" | "PRAZO PRÓXIMO" | "ÚLTIMOS DIAS" | "FLUXO CONTÍNUO"
+STATUS disponíveis: "NOVO" | "PRAZO PRÓXIMO" | "ÚLTIMOS DIAS" | "FLUXO CONTÍNUO" | "" (sem status — só para destaque institucional, ver abaixo)
 
-CATEGORIAS disponíveis: "pesquisa" | "internac" | "bolsas" | "evento" | "premiacoes" | "extensao"
+CATEGORIAS disponíveis: "pesquisa" | "internac" | "bolsas" | "evento" | "premiacoes" | "extensao" | "" (sem categoria — só para destaque institucional, ver abaixo)
+
+Se o destaque for um texto institucional (boas-vindas, aviso etc.) e não uma oportunidade real, marque "institucional": true e deixe "status" e "categoria" como string vazia "".
 
 ORIGENS disponíveis: "Coord. de Pesquisa" | "Coord. de Pós-Graduação" | "Coord. de Extensão" | "Coord. de Laboratórios" | "Coord. de Rel. Institucionais" | "Núcleo de Rel. Internacionais" | "Núcleo de Arte e Cultura" | "Núcleo de Ed. Ambiental" | "Núcleo de Incubação" | "DPPGE"
 

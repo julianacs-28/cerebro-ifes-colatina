@@ -92,10 +92,54 @@ Sim, uma vez por edição — não existe automação para isso ainda. É rápid
 
 ---
 
-## Referência rápida
+## Categorias, coordenadorias e status — a lógica de organização
 
-**Status automático do site** (dois eixos independentes):
-- **Novo** = inserido no `banco.json` há ≤ 20 dias
-- Urgência do prazo: **Prazo próximo** (>20 dias) · **Últimos dias** (≤20 dias) · **Fluxo contínuo** (sem prazo fixo)
+Cada oportunidade publicada é classificada em três eixos independentes. Entender essa lógica ajuda tanto na curadoria (passo 2 do fluxo) quanto na leitura do site e dos dashboards.
 
-**Categorias:** `pesquisa` · `internac` · `bolsas` · `evento` · `premiacoes` · `extensao`
+### Categorias
+
+A categoria descreve **o tipo de oportunidade**, não quem a divulga (isso é a origem, ver abaixo).
+
+| Categoria | Chave JSON | O que entra | Exemplos de publicações |
+|---|---|---|---|
+| Pesquisa & Fomento | `pesquisa` | Editais e chamadas de fomento a projetos de pesquisa institucional | Edital PRPPG Prociência · Chamada CNPq Universal · Edital Fapes de apoio a grupos de pesquisa |
+| Internacionalização | `internac` | Mobilidade acadêmica, parcerias e convênios com instituições estrangeiras | Edital de mobilidade internacional discente/docente · Programa Idiomas sem Fronteiras · Chamada de duplo diploma |
+| Bolsas & Auxílios | `bolsas` | Bolsas de iniciação científica, pós-graduação, monitoria e auxílios financeiros a estudantes | Edital PIBIC/PIBITI · Bolsa de mestrado/doutorado · Auxílio para participação em evento científico |
+| Eventos & Capacitações | `evento` | Congressos, seminários, workshops, cursos e semanas acadêmicas — com data e local definidos | Semana Nacional de Ciência e Tecnologia · Workshop de escrita científica · Curso de capacitação em metodologia de pesquisa |
+| Premiações | `premiacoes` | Prêmios, concursos e reconhecimentos acadêmicos | Prêmio Jovem Cientista · Concurso de melhor TCC · Prêmio CAPES de Teses |
+| Extensão & Comunidade | `extensao` | Projetos de extensão, ações comunitárias, cultura e responsabilidade social | Edital de Bolsas de Extensão · Projeto de educação ambiental · Ação de arte e cultura no campus |
+
+**Regra de curadoria:** quando uma oportunidade parece se encaixar em mais de uma categoria (ex: um edital de bolsa para evento internacional), escolher a categoria que representa o **objetivo principal** da oportunidade — não o meio. Um edital de bolsa para congresso no exterior, por exemplo, entra em `bolsas` (o que se ganha), não em `evento` ou `internac`.
+
+### Coordenadorias (campo "origem")
+
+A origem identifica **qual setor do Ifes Colatina é responsável** pela oportunidade — é informativa, não afeta a cor do card nem o layout.
+
+| Origem | O que costuma publicar |
+|---|---|
+| Coord. de Pesquisa | Editais e chamadas de projetos de pesquisa institucional |
+| Coord. de Pós-Graduação | Processos seletivos, bolsas e informes de programas de pós-graduação |
+| Coord. de Extensão | Editais e ações de projetos de extensão |
+| Coord. de Laboratórios | Editais de uso, infraestrutura e equipamentos de laboratório |
+| Coord. de Rel. Institucionais | Parcerias e convênios institucionais |
+| Núcleo de Rel. Internacionais | Mobilidade acadêmica e parcerias com instituições estrangeiras |
+| Núcleo de Arte e Cultura | Eventos e editais culturais e artísticos |
+| Núcleo de Ed. Ambiental | Ações e projetos de educação ambiental |
+| Núcleo de Incubação | Empreendedorismo e apoio a negócios incubados |
+| DPPGE | Informes institucionais gerais e oportunidades que não têm um setor específico de origem |
+
+### Status
+
+Existem **dois sistemas de status diferentes**, um editorial (decidido por quem monta a edição) e um automático (calculado pelo site) — não confundir os dois.
+
+**No boletim, o status é uma decisão editorial** ao montar a edição:
+- **NOVO** = primeira vez que a oportunidade é divulgada
+- **PRAZO PRÓXIMO** = faltam mais de 20 dias para o prazo encerrar
+- **ÚLTIMOS DIAS** = faltam menos de 20 dias para o prazo encerrar
+- **FLUXO CONTÍNUO** = não tem prazo fixo de inscrição (fluxo contínuo/demanda contínua)
+
+**No site, o status é calculado automaticamente em dois eixos independentes**, exibidos lado a lado como pílulas:
+- **Novidade** (badge "Novo"): inserido no `banco.json` há ≤ 20 dias — calculado a partir da `dataCadastro`, que é preservada mesmo quando a oportunidade é atualizada em edições seguintes (evita que um item antigo republicado ganhe a badge de novo de novo)
+- **Urgência do prazo:** **Prazo próximo** (>20 dias) · **Últimos dias** (≤20 dias) · **Fluxo contínuo** (sem prazo fixo)
+
+**Categorias (chaves JSON):** `pesquisa` · `internac` · `bolsas` · `evento` · `premiacoes` · `extensao`

@@ -61,7 +61,7 @@ O **Radar de Oportunidades** é um ecossistema de comunicação institucional da
     "publico": "Público-alvo",
     "imagem": "https://github.com/...?raw=true",
     "ctaTexto": "Acessar Edital → (opcional — sobrescreve o texto padrão do botão)",
-    "institucional": "false (opcional — true quando o destaque é boas-vindas/aviso, não uma oportunidade real; nesse caso não é mesclado no banco.json)"
+    "institucional": "false (opcional — true quando o destaque é boas-vindas/aviso, não uma oportunidade real; nesse caso não é mesclado no banco.json e normalmente vem com status e categoria vazios, ver abaixo)"
   },
   "categorias": {
     "pesquisa": [...],
@@ -84,7 +84,7 @@ O **Radar de Oportunidades** é um ecossistema de comunicação institucional da
 ### Campos de cada card de categoria
 ```json
 {
-  "status": "NOVO | PRAZO PRÓXIMO | ÚLTIMOS DIAS | FLUXO CONTÍNUO",
+  "status": "NOVO | PRAZO PRÓXIMO | ÚLTIMOS DIAS | FLUXO CONTÍNUO | \"\" (sem status)",
   "origem": "Ver lista de origens abaixo",
   "titulo": "Nome completo do edital",
   "link": "https://...",
@@ -96,6 +96,14 @@ O **Radar de Oportunidades** é um ecossistema de comunicação institucional da
   "local": "... (só para categoria evento)"
 }
 ```
+
+### Status e categoria vazios ("sem vínculo")
+
+`status` (em qualquer card ou no destaque) e `categoria` (só no destaque) aceitam `""` — o editor mostra a opção **"— Sem status —"** / **"— Sem categoria —"** nos selects. Quando vazio:
+- Nenhuma badge de status é renderizada no boletim (fica só a origem, sem a barra separadora).
+- Nenhum rótulo de categoria é renderizado acima do destaque.
+
+Uso típico: destaque **institucional** (boas-vindas, aviso), que não é uma oportunidade real e não deve carregar um selo "NOVO" nem ser associado a uma categoria de conteúdo — ver `edicoes/ed-01/dados.json` para um exemplo real.
 
 ---
 

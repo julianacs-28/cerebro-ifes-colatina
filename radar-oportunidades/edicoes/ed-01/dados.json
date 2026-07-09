@@ -4,8 +4,8 @@
   "dataEnvio": "01/07/2026",
   "destaque": {
     "institucional": true,
-    "status": "NOVO",
-    "categoria": "extensao",
+    "status": "",
+    "categoria": "",
     "origem": "DPPGE",
     "titulo": "Bem-vindo(a) ao Radar de Oportunidades!",
     "link": "https://julianacs-28.github.io/cerebro-ifes-colatina/radar-oportunidades/",
