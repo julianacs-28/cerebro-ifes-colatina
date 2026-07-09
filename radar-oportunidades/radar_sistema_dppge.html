@@ -605,6 +605,16 @@
             <label>Imagem (URL GitHub — opcional)</label>
             <input type="url" id="d-imagem" placeholder="https://github.com/...?raw=true">
           </div>
+          <div class="field">
+            <label>Texto do botão (opcional — padrão "Acessar Edital →")</label>
+            <input type="text" id="d-cta" placeholder="Acessar Edital →">
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:normal;">
+              <input type="checkbox" id="d-institucional" style="width:auto;">
+              Este destaque é institucional (boas-vindas, aviso etc.), não uma oportunidade real — não será adicionado ao site como edital
+            </label>
+          </div>
         </div>
 
         <!-- TAB: CATEGORIAS -->
@@ -1070,6 +1080,8 @@ function collectData() {
     valor: getFieldVal('d-valor'),
     publico: getFieldVal('d-publico'),
     imagem: getFieldVal('d-imagem'),
+    ctaTexto: getFieldVal('d-cta'),
+    institucional: document.getElementById('d-institucional')?.checked || false,
   };
 
   const cats = {};
@@ -1192,7 +1204,7 @@ ${siteBanner()}
       ${dadosRow(dData.prazo, dData.valor, dData.publico, '')}
       <table cellpadding="0" cellspacing="0" border="0"><tr>
         <td style="background-color:#0c420b;padding:10px 24px;">
-          <a href="${dData.link || '#'}" style="display:inline-block;color:#ffffff;font-size:13px;font-weight:bold;font-family:'Segoe UI',Arial,sans-serif;text-decoration:none;">Acessar Edital →</a>
+          <a href="${dData.link || '#'}" style="display:inline-block;color:#ffffff;font-size:13px;font-weight:bold;font-family:'Segoe UI',Arial,sans-serif;text-decoration:none;">${dData.ctaTexto || 'Acessar Edital →'}</a>
         </td>
       </tr></table>
     </td>
@@ -1347,6 +1359,8 @@ function novaEdicao() {
   document.getElementById('d-valor').value = '';
   document.getElementById('d-publico').value = '';
   document.getElementById('d-imagem').value = '';
+  document.getElementById('d-cta').value = '';
+  document.getElementById('d-institucional').checked = false;
 
   ['pesquisa','internac','bolsas','evento','premiacoes','extensao'].forEach(cat => {
     document.getElementById('cards-' + cat).innerHTML = '';
@@ -1379,6 +1393,8 @@ function loadData(d) {
     document.getElementById('d-valor').value = d.destaque.valor || '';
     document.getElementById('d-publico').value = d.destaque.publico || '';
     document.getElementById('d-imagem').value = d.destaque.imagem || '';
+    document.getElementById('d-cta').value = d.destaque.ctaTexto || '';
+    document.getElementById('d-institucional').checked = !!d.destaque.institucional;
   }
 
   ['pesquisa','internac','bolsas','evento','premiacoes','extensao'].forEach(cat => {

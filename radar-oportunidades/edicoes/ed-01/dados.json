@@ -3,19 +3,33 @@
   "mes": "Julho 2026",
   "dataEnvio": "01/07/2026",
   "destaque": {
-    "status": "PRAZO PRÓXIMO",
-    "categoria": "pesquisa",
-    "origem": "Coord. de Pesquisa",
-    "titulo": "Chamada CNPq/FNDCT Nº 06/2026 — Universal",
-    "link": "https://www.gov.br/cnpq/pt-br/chamadas/todas-as-chamadas/chamadas-2026/chamada-no-06-2026/chamada-publica-cnpq-N-06-2026",
-    "resumo": "A Chamada CNPq/FNDCT Nº 06/2026 — Universal apoia o desenvolvimento de projetos de pesquisa em todas as áreas do conhecimento, destinada a pesquisadores brasileiros vinculados a instituições de ensino e pesquisa. As propostas devem ser submetidas pela Plataforma Carlos Chagas dentro do período de inscrição.",
-    "prazo": "03/08/2026",
-    "valor": "Conforme edital",
-    "publico": "Docentes e Pesquisadores",
+    "institucional": true,
+    "status": "NOVO",
+    "categoria": "extensao",
+    "origem": "DPPGE",
+    "titulo": "Bem-vindo(a) ao Radar de Oportunidades!",
+    "link": "https://julianacs-28.github.io/cerebro-ifes-colatina/radar-oportunidades/",
+    "ctaTexto": "Conhecer o Site →",
+    "resumo": "É com grande satisfação que a Diretoria de Pesquisa, Pós-Graduação e Extensão (DPPGE) apresenta o Radar de Oportunidades: um boletim mensal que reúne, num só lugar, editais, bolsas, fomento, eventos e premiações relevantes para toda a comunidade do Ifes Campus Colatina. A partir de agora, essas oportunidades também ficam disponíveis e sempre atualizadas no site do Radar, com busca, filtros por categoria e sinalização automática de prazos. Fique de olho na sua caixa de entrada: uma nova edição chega todo mês.",
+    "prazo": "",
+    "valor": "",
+    "publico": "",
     "imagem": ""
   },
   "categorias": {
     "pesquisa": [
+      {
+        "status": "PRAZO PRÓXIMO",
+        "origem": "Coord. de Pesquisa",
+        "titulo": "Chamada CNPq/FNDCT Nº 06/2026 — Universal",
+        "link": "https://www.gov.br/cnpq/pt-br/chamadas/todas-as-chamadas/chamadas-2026/chamada-no-06-2026/chamada-publica-cnpq-N-06-2026",
+        "resumo": "A Chamada CNPq/FNDCT Nº 06/2026 — Universal apoia o desenvolvimento de projetos de pesquisa em todas as áreas do conhecimento, destinada a pesquisadores brasileiros vinculados a instituições de ensino e pesquisa. As propostas devem ser submetidas pela Plataforma Carlos Chagas dentro do período de inscrição.",
+        "prazo": "03/08/2026",
+        "valor": "Conforme edital",
+        "publico": "Docentes e Pesquisadores",
+        "imagem": "",
+        "local": ""
+      },
       {
         "status": "PRAZO PRÓXIMO",
         "origem": "Coord. de Pesquisa",

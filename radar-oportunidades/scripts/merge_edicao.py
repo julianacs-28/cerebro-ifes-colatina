@@ -9,6 +9,10 @@ O banco.json é a fonte única lida pelo index.html (site público) e contém
 TODAS as oportunidades já divulgadas em qualquer edição, deduplicadas por
 título. Itens já existentes têm prazo/link/valor/publico/status atualizados,
 mas preservam a dataCadastro original (usada para a badge "Novo" do site).
+
+Se o "destaque" da edição for um texto institucional (boas-vindas, aviso,
+etc.) em vez de uma oportunidade real, marque "institucional": true nele —
+assim ele não é mesclado no banco.json como se fosse um edital.
 """
 import json
 import re
@@ -34,10 +38,12 @@ def carregar_banco():
 def coletar_oportunidades(edicao_json):
     itens = []
     destaque = edicao_json.get("destaque")
-    if destaque and destaque.get("titulo"):
+    if destaque and destaque.get("titulo") and not destaque.get("institucional"):
         item = dict(destaque)
         item["_cat"] = destaque.get("categoria", "pesquisa")
         item.pop("categoria", None)
+        item.pop("ctaTexto", None)
+        item.pop("institucional", None)
         itens.append(item)
     for cat, lista in (edicao_json.get("categorias") or {}).items():
         for card in lista or []:

@@ -59,7 +59,9 @@ O **Radar de Oportunidades** é um ecossistema de comunicação institucional da
     "prazo": "DD/MM/AAAA",
     "valor": "R$ 0.000",
     "publico": "Público-alvo",
-    "imagem": "https://github.com/...?raw=true"
+    "imagem": "https://github.com/...?raw=true",
+    "ctaTexto": "Acessar Edital → (opcional — sobrescreve o texto padrão do botão)",
+    "institucional": "false (opcional — true quando o destaque é boas-vindas/aviso, não uma oportunidade real; nesse caso não é mesclado no banco.json)"
   },
   "categorias": {
     "pesquisa": [...],
